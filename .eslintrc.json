@@ -55,11 +55,12 @@
       "files": ["src/lib/*.js", "tests/**/*.js"],
       "env": {
         "es2020": true,
-        "node": true
+        "node": true,
+        "jest": true
       },
       "parserOptions": {
         "ecmaVersion": 2020,
-        "sourceType": "module"
+        "sourceType": "commonjs"
       }
     }
   ]
