@@ -289,6 +289,22 @@ function manageApiTokens() {
         ui.alert('MISSKEY_TOKEN を保存しました。');
       }
     }
+
+    // Misskey Webhook シークレット
+    var existingSecret = PropertiesService.getScriptProperties().getProperty('MISSKEY_WEBHOOK_SECRET');
+    var secretPrompt = existingSecret
+      ? 'MISSKEY_WEBHOOK_SECRET は設定済みです。再生成しますか？\n(OK = 再生成 / キャンセル = スキップ)'
+      : 'MISSKEY_WEBHOOK_SECRET が未設定です。自動生成して保存しますか？\n(OK = 生成 / キャンセル = スキップ)';
+    var wbRes = ui.alert('Webhook シークレット', secretPrompt, ui.ButtonSet.OK_CANCEL);
+    if (wbRes === ui.Button.OK) {
+      var newSecret = Utilities.getUuid().replace(/-/g, '');
+      PropertiesService.getScriptProperties().setProperty('MISSKEY_WEBHOOK_SECRET', newSecret);
+      ui.alert(
+        'Webhook シークレット生成完了',
+        'MISSKEY_WEBHOOK_SECRET を保存しました:\n\n' + newSecret + '\n\nこの値を Misskey の Webhook 設定「シークレット」フィールドに設定してください。',
+        ui.ButtonSet.OK
+      );
+    }
   }
 
   // Mastodon トークン
