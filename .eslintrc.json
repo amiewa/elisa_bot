@@ -23,6 +23,7 @@
     "incrementCounter": "readonly",
     "loadNGWords": "readonly",
     "containsNGWord": "readonly",
+    "jaccardSimilarity": "readonly",
     "isTimeSafe": "readonly",
     "isNightTime": "readonly",
     "createAdapter": "readonly",
@@ -35,6 +36,21 @@
     "runFollowSync": "readonly",
     "processMarkovPost": "readonly",
     "processMastodonPolling": "readonly",
+
+    "cleanNoteText": "readonly",
+    "splitIntoSentences": "readonly",
+    "parseYahooResponse": "readonly",
+    "fallbackTokenize": "readonly",
+    "calculateScore": "readonly",
+    "pickNextToken": "readonly",
+    "injectEmojis": "readonly",
+
+    "loadNgramStore_": "readonly",
+    "flushNgramStore_": "readonly",
+    "generatePost_": "readonly",
+    "learnFromNotes_": "readonly",
+    "handleMention": "readonly",
+    "writeDashboard_": "readonly",
 
     "getSheet_": "readonly",
     "getProp_": "readonly",
@@ -61,7 +77,7 @@
   },
   "rules": {
     "no-unused-vars": ["warn", {
-      "varsIgnorePattern": "^(doPost|onOpen|mainDispatcher|setupSpreadsheet|validateConfig|manageApiTokens|cleanupAfterPlatformSwitch|testShowConfig|runFollowSync|executeAutoDelete|runDailyMaintenance|processMarkovPost|processMastodonPolling|SHEET|SS|SCRIPT_START|getConfig|logError|incrementCounter|loadNGWords|containsNGWord|isTimeSafe|isNightTime|createAdapter|callMisskeyApi|callMastodonApi|makeApiError_|createMisskeyAdapter_|createMastodonAdapter_|learn|generate|NGramStore|getSheet_|getProp_|setProp_|deleteProp_|clearConfigCache_|cleanupOldCounters_|now_)"
+      "varsIgnorePattern": "^(doPost|onOpen|onHourlyTrigger|mainDispatcher|processLearn|processMarkovPost|processMastodonPolling|setupSpreadsheet|validateConfig|manageApiTokens|cleanupAfterPlatformSwitch|testShowConfig|runFollowSync|executeAutoDelete|runDailyMaintenance|rotateProcessedIds|rotatePostHistory|rotateRawLearnData|rotateErrorLog|refreshCustomEmojis|cleanupProperties_|SHEET|SS|SCRIPT_START|getConfig|logError|incrementCounter|loadNGWords|containsNGWord|isTimeSafe|isNightTime|createAdapter|callMisskeyApi|callMastodonApi|makeApiError_|createMisskeyAdapter_|createMastodonAdapter_|learn|generate|NGramStore|getSheet_|getProp_|setProp_|deleteProp_|clearConfigCache_|cleanupOldCounters_|now_|loadNgramStore_|flushNgramStore_|generatePost_|learnFromNotes_|tokenizeNote_|callYahooMA_|writeDashboard_)"
     }],
     "no-undef": "error",
     "no-redeclare": ["error", { "builtinGlobals": false }],
