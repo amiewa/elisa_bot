@@ -195,42 +195,34 @@ function decorateDashboard_() {
     sheet.autoResizeColumn(col);
   }
 
-  // 条件付き書式
-  var rules = [];
-  var builder = SpreadsheetApp.newConditionalFormatRule();
-
-  // error > 0 → 赤系
-  rules.push(
-    builder.reset()
+  // 条件付き書式(ルールごとに newConditionalFormatRule() を呼ぶ)
+  var maxRow = sheet.getMaxRows() - 1;
+  var rules = [
+    // error > 0 → 赤系
+    SpreadsheetApp.newConditionalFormatRule()
       .whenNumberGreaterThan(0)
       .setBackground('#f8d7da')
-      .setRanges([sheet.getRange(2, 8, sheet.getMaxRows() - 1, 1)])
-      .build()
-  );
-  // url_fetch > 15000 → 黄系
-  rules.push(
-    builder.reset()
+      .setRanges([sheet.getRange(2, 8, maxRow, 1)])
+      .build(),
+    // url_fetch > 15000 → 黄系
+    SpreadsheetApp.newConditionalFormatRule()
       .whenNumberGreaterThan(15000)
       .setBackground('#fff3cd')
-      .setRanges([sheet.getRange(2, 9, sheet.getMaxRows() - 1, 1)])
-      .build()
-  );
-  // ngram_rows > 45000 → 黄系
-  rules.push(
-    builder.reset()
+      .setRanges([sheet.getRange(2, 9, maxRow, 1)])
+      .build(),
+    // ngram_rows > 45000 → 黄系
+    SpreadsheetApp.newConditionalFormatRule()
       .whenNumberGreaterThan(45000)
       .setBackground('#fff3cd')
-      .setRanges([sheet.getRange(2, 10, sheet.getMaxRows() - 1, 1)])
-      .build()
-  );
-  // followers > 300 → 黄系
-  rules.push(
-    builder.reset()
+      .setRanges([sheet.getRange(2, 10, maxRow, 1)])
+      .build(),
+    // followers > 300 → 黄系
+    SpreadsheetApp.newConditionalFormatRule()
       .whenNumberGreaterThan(300)
       .setBackground('#fff3cd')
-      .setRanges([sheet.getRange(2, 11, sheet.getMaxRows() - 1, 1)])
-      .build()
-  );
+      .setRanges([sheet.getRange(2, 11, maxRow, 1)])
+      .build(),
+  ];
 
   sheet.setConditionalFormatRules(rules);
 }
