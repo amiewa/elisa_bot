@@ -34,7 +34,16 @@
     "runDailyMaintenance": "readonly",
     "runFollowSync": "readonly",
     "processMarkovPost": "readonly",
-    "processMastodonPolling": "readonly"
+    "processMastodonPolling": "readonly",
+
+    "getSheet_": "readonly",
+    "getProp_": "readonly",
+    "setProp_": "readonly",
+    "deleteProp_": "readonly",
+    "clearConfigCache_": "readonly",
+    "cleanupOldCounters_": "readonly",
+    "now_": "readonly",
+    "validateConfigValues": "readonly"
   },
   "parserOptions": {
     "ecmaVersion": 2020,
@@ -42,7 +51,7 @@
   },
   "rules": {
     "no-unused-vars": ["warn", {
-      "varsIgnorePattern": "^(doPost|onOpen|mainDispatcher|setupSpreadsheet|validateConfig|manageApiTokens|runFollowSync|executeAutoDelete|runDailyMaintenance|processMarkovPost|processMastodonPolling|SHEET|SS|SCRIPT_START|getConfig|logError|incrementCounter|loadNGWords|containsNGWord|isTimeSafe|isNightTime|createAdapter|callMisskeyApi|callMastodonApi|learn|generate|NGramStore)"
+      "varsIgnorePattern": "^(doPost|onOpen|mainDispatcher|setupSpreadsheet|validateConfig|manageApiTokens|cleanupAfterPlatformSwitch|testShowConfig|runFollowSync|executeAutoDelete|runDailyMaintenance|processMarkovPost|processMastodonPolling|SHEET|SS|SCRIPT_START|getConfig|logError|incrementCounter|loadNGWords|containsNGWord|isTimeSafe|isNightTime|createAdapter|callMisskeyApi|callMastodonApi|learn|generate|NGramStore|getSheet_|getProp_|setProp_|deleteProp_|clearConfigCache_|cleanupOldCounters_|now_)"
     }],
     "no-undef": "error",
     "no-redeclare": ["error", { "builtinGlobals": false }],
