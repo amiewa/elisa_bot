@@ -49,16 +49,12 @@ function validateConfigValues(configMap) {
       errors.push(`${key} は必須です`);
       return;
     }
-    try {
-      const u = new URL(v);
-      if (!['http:', 'https:'].includes(u.protocol)) {
-        errors.push(`${key} は http または https の URL にしてください`);
-      }
-      if (v.endsWith('/')) {
-        errors.push(`${key} の末尾スラッシュを取り除いてください`);
-      }
-    } catch (_) {
+    if (!/^https?:\/\/.+/.test(v)) {
       errors.push(`${key} が正しい URL 形式ではありません (現在: ${v})`);
+      return;
+    }
+    if (v.endsWith('/')) {
+      errors.push(`${key} の末尾スラッシュを取り除いてください`);
     }
   };
 
