@@ -1,0 +1,8 @@
+node_modules/**
+tests/**
+.git/**
+docs/**
+tasks/**
+*.md
+*.json
+!appsscript.json

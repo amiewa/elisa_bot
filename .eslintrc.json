@@ -1,0 +1,66 @@
+{
+  "env": {
+    "es2020": true
+  },
+  "globals": {
+    "SpreadsheetApp": "readonly",
+    "CacheService": "readonly",
+    "PropertiesService": "readonly",
+    "LockService": "readonly",
+    "UrlFetchApp": "readonly",
+    "Utilities": "readonly",
+    "MailApp": "readonly",
+    "ContentService": "readonly",
+    "Logger": "readonly",
+    "Session": "readonly",
+
+    "SHEET": "writable",
+    "SS": "writable",
+    "SCRIPT_START": "writable",
+
+    "getConfig": "readonly",
+    "logError": "readonly",
+    "incrementCounter": "readonly",
+    "loadNGWords": "readonly",
+    "containsNGWord": "readonly",
+    "isTimeSafe": "readonly",
+    "isNightTime": "readonly",
+    "createAdapter": "readonly",
+    "callMisskeyApi": "readonly",
+    "callMastodonApi": "readonly",
+    "learn": "readonly",
+    "generate": "readonly",
+    "NGramStore": "readonly",
+    "runDailyMaintenance": "readonly",
+    "runFollowSync": "readonly",
+    "processMarkovPost": "readonly",
+    "processMastodonPolling": "readonly"
+  },
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "script"
+  },
+  "rules": {
+    "no-unused-vars": ["warn", {
+      "varsIgnorePattern": "^(doPost|onOpen|mainDispatcher|setupSpreadsheet|validateConfig|manageApiTokens|runFollowSync|executeAutoDelete|runDailyMaintenance|processMarkovPost|processMastodonPolling|SHEET|SS|SCRIPT_START|getConfig|logError|incrementCounter|loadNGWords|containsNGWord|isTimeSafe|isNightTime|createAdapter|callMisskeyApi|callMastodonApi|learn|generate|NGramStore)"
+    }],
+    "no-undef": "error",
+    "no-redeclare": ["error", { "builtinGlobals": false }],
+    "eqeqeq": ["error", "smart"],
+    "curly": ["error", "multi-line"],
+    "no-eval": "error"
+  },
+  "overrides": [
+    {
+      "files": ["src/lib/*.js", "tests/**/*.js"],
+      "env": {
+        "es2020": true,
+        "node": true
+      },
+      "parserOptions": {
+        "ecmaVersion": 2020,
+        "sourceType": "module"
+      }
+    }
+  ]
+}

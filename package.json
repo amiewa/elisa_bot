@@ -1,0 +1,24 @@
+{
+  "name": "elisa_bot",
+  "version": "0.1.0",
+  "description": "elisa_bot — Misskey/Mastodon 両対応マルコフ連鎖 bot (GAS)",
+  "scripts": {
+    "lint": "eslint --ext .gs src/",
+    "lint:lib": "eslint --ext .js src/lib/ tests/",
+    "test": "jest",
+    "push": "clasp push",
+    "pull": "clasp pull",
+    "watch": "clasp push --watch"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/**/*.test.js"]
+  },
+  "devDependencies": {
+    "@google/clasp": "^3.3.0",
+    "@types/google-apps-script": "^1.0.83",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.5"
+  }
+}
