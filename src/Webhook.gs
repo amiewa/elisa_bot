@@ -33,7 +33,8 @@ function doPost(e) {
     if (!sigHeader && e.postData && e.postData.headers) {
       sigHeader = e.postData.headers['X-Misskey-Hook-Secret'] || '';
     }
-    if (!adapter.verifyWebhookSignature(sigHeader, rawBody)) {
+    var webhookSecret = getProp_('MISSKEY_WEBHOOK_SECRET', '');
+    if (!adapter.verifyWebhookSignature(webhookSecret, sigHeader, rawBody)) {
       return ContentService.createTextOutput('Unauthorized').setMimeType(MIME);
     }
   } catch (err) {
@@ -82,6 +83,15 @@ function handleMention(note) {
   var excludeBots = getConfig('MENTION_EXCLUDE_BOTS', 'TRUE') === 'TRUE';
   if (excludeBots && note.author && note.author.is_bot) return;
 
+  // --- アダプタ生成（Layer 3 / MUTUAL_ONLY / postNote で共用）---
+  var adapter;
+  try {
+    adapter = createAdapter(platform);
+  } catch (err) {
+    logError('handleMention:createAdapter', String(err), platform);
+    return;
+  }
+
   // --- 3層重複防止 ---
   var cacheKey = 'PM_' + noteId;
 
@@ -95,7 +105,6 @@ function handleMention(note) {
 
   // Layer 3: API（getRepliesTo）— コスト高いため最後に確認
   try {
-    var adapter = createAdapter(platform);
     var replies = adapter.getRepliesTo(noteId);
     if (replies && replies.length > 0) {
       // 既返信済みをマーク

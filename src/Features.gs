@@ -222,9 +222,7 @@ function _savePostHistory_(text, platform) {
 function processMastodonPolling() {
   var adapter = createAdapter('mastodon');
 
-  var sinceId = getProp_('MASTODON_LAST_SINCE_ID', null);
   var options = { max_pages: 3 };
-  if (sinceId) options.since_id = sinceId;
 
   var notifications;
   try {
@@ -235,10 +233,6 @@ function processMastodonPolling() {
   }
 
   if (!notifications || notifications.length === 0) return;
-
-  // 最新の ID を since_id として保存（次回取得の起点）
-  var latestId = notifications[0].id;
-  if (latestId) setProp_('MASTODON_LAST_SINCE_ID', String(latestId));
 
   // 各メンションを処理（handleMention は Webhook.gs に定義）
   for (var i = 0; i < notifications.length; i++) {
