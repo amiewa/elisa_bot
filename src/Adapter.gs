@@ -395,6 +395,10 @@ function createMastodonAdapter_() {
 
     postNote: function (text, options) {
       var o = options || {};
+      var visMap = { home: 'unlisted', followers: 'private' };
+      if (o.visibility && visMap[o.visibility]) {
+        o = Object.assign({}, o, { visibility: visMap[o.visibility] });
+      }
       var body = Object.assign({ status: text }, o);
       return api('/api/v1/statuses', 'POST', body).data;
     },
