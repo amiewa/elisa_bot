@@ -307,24 +307,29 @@ function createMisskeyAdapter_() {
     parseNotification: function (event) {
       if (!event || !event.body) return null;
       var body = event.body;
-      var type = body.type;
+      // Misskey webhook: body.type があればそれを、なければ外側の event.type を使う
+      var type = body.type || event.type;
       var note = body.note || body.body;
 
       if (!note) {
-        // 'followed' イベント: body.user にフォロワー情報が入る
-        if (type === 'followed' && body.user) {
-          var u = body.user;
-          return {
-            _notif_type: type,
-            id: String(body.id || ''),
-            platform: 'misskey',
-            author: {
-              id: String(u.id || body.userId || ''),
-              acct: u.username || '',
-              is_bot: Boolean(u.isBot),
-              is_self: false,
-            },
-          };
+        // 'followed' イベント:
+        //   通知ラッパー形式 → body.user にフォロワー情報
+        //   直接ユーザー形式 → body 自体がフォロワーオブジェクト
+        if (type === 'followed') {
+          var u = (body.user && body.user.id) ? body.user : body;
+          if (u && u.id) {
+            return {
+              _notif_type: 'followed',
+              id: String(event.eventId || body.id || ''),
+              platform: 'misskey',
+              author: {
+                id: String(u.id || ''),
+                acct: u.username || '',
+                is_bot: Boolean(u.isBot),
+                is_self: false,
+              },
+            };
+          }
         }
         return null;
       }
