@@ -158,22 +158,18 @@ function handleMention(note) {
   }
 
   // --- キーワードフォローバック（MUTUAL_ONLY より前に評価）---
-  // MUTUAL_ONLY で返信をスキップする場合でもフォローバックは行う
+  // フォローバックした場合は返信しない
   var textForCheck = note.text_clean || note.text_raw || '';
   if (checkKeywordFollowBack_(textForCheck) && note.author && !note.author.is_bot) {
     if (!cachedRel || !cachedRel.following) {
       try {
         adapter.follow(note.author.id);
         incrementCounter('FOLLOW_BACK', platform);
-        logError('handleMention:follow:ok', 'キーワードFB完了 id=' + note.author.id, platform);
-        // フォロー後は following=true として扱う
-        if (cachedRel) cachedRel.following = true;
       } catch (err) {
         logError('handleMention:follow', String(err), platform);
       }
-    } else {
-      logError('handleMention:follow:skip', '既フォロー済み id=' + note.author.id, platform);
     }
+    return; // キーワードFB時は返信しない
   }
 
   // --- MENTION_MUTUAL_ONLY 判定 ---
