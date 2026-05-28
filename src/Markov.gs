@@ -126,8 +126,10 @@ function callYahooMA_(text, clientId) {
       method: 'jlp.maservice.parse',
       params: { q: text }
     });
+    // GAS は User-Agent ヘッダを正しく送れない場合があるため
+    // ?appid= クエリパラメータも併用する(Yahoo JLP V2 は両方を受け付ける)
     var res = UrlFetchApp.fetch(
-      'https://jlp.yahooapis.jp/MAService/V2/parse',
+      'https://jlp.yahooapis.jp/MAService/V2/parse?appid=' + encodeURIComponent(clientId),
       {
         method: 'post',
         contentType: 'application/json',
@@ -139,7 +141,7 @@ function callYahooMA_(text, clientId) {
     incrementCounter('URL_FETCH', 'system');
 
     if (res.getResponseCode() !== 200) {
-      logError('callYahooMA_', 'HTTP ' + res.getResponseCode(), 'system');
+      logError('callYahooMA_', 'HTTP ' + res.getResponseCode() + ': ' + res.getContentText().substring(0, 300), 'system');
       return null;
     }
     return parseYahooResponse(JSON.parse(res.getContentText()));
