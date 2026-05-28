@@ -124,7 +124,10 @@ function handleMention(note) {
   if (note.author) {
     try {
       cachedRel = adapter.getRelation(note.author.id);
-    } catch (_) {}
+      logError('handleMention:rel', 'id=' + note.author.id + ' rel=' + JSON.stringify(cachedRel), platform);
+    } catch (e) {
+      logError('handleMention:getRelation', String(e) + ' id=' + note.author.id, platform);
+    }
   }
 
   // --- キーワードフォローバック（MUTUAL_ONLY より前に評価）---
@@ -135,11 +138,14 @@ function handleMention(note) {
       try {
         adapter.follow(note.author.id);
         incrementCounter('FOLLOW_BACK', platform);
+        logError('handleMention:follow:ok', 'キーワードFB完了 id=' + note.author.id, platform);
         // フォロー後は following=true として扱う
         if (cachedRel) cachedRel.following = true;
       } catch (err) {
         logError('handleMention:follow', String(err), platform);
       }
+    } else {
+      logError('handleMention:follow:skip', '既フォロー済み id=' + note.author.id, platform);
     }
   }
 
@@ -201,23 +207,39 @@ function handleMention(note) {
  * @param {string} platform
  */
 function handleFollowed(unified, adapter, platform) {
-  if (!parseBool(getConfig('FOLLOW_AUTO_FOLLOW_BACK', 'TRUE'), true)) return;
-  if (!unified.author || !unified.author.id) return;
-  if (unified.author.is_bot && parseBool(getConfig('MENTION_EXCLUDE_BOTS', 'TRUE'), true)) return;
+  if (!parseBool(getConfig('FOLLOW_AUTO_FOLLOW_BACK', 'TRUE'), true)) {
+    logError('handleFollowed:skip', 'FOLLOW_AUTO_FOLLOW_BACK=FALSE', platform);
+    return;
+  }
+  if (!unified.author || !unified.author.id) {
+    logError('handleFollowed:skip', 'author.id なし unified=' + JSON.stringify(unified), platform);
+    return;
+  }
+  if (unified.author.is_bot && parseBool(getConfig('MENTION_EXCLUDE_BOTS', 'TRUE'), true)) {
+    logError('handleFollowed:skip', 'ボットアカウント id=' + unified.author.id, platform);
+    return;
+  }
 
   var userId = unified.author.id;
 
   // 既にフォロー中なら重複してフォローしない
+  var relRaw;
   try {
-    var rel = adapter.getRelation(userId);
-    if (rel && rel.following) return;
-  } catch (_) {}
+    relRaw = adapter.getRelation(userId);
+    if (relRaw && relRaw.following) {
+      logError('handleFollowed:skip', '既フォロー済み id=' + userId + ' rel=' + JSON.stringify(relRaw), platform);
+      return;
+    }
+  } catch (e) {
+    logError('handleFollowed:getRelation', String(e) + ' id=' + userId, platform);
+  }
 
   try {
     adapter.follow(userId);
     incrementCounter('FOLLOW_BACK', platform);
+    logError('handleFollowed:ok', 'フォローバック完了 id=' + userId, platform);
   } catch (err) {
-    logError('handleFollowed:follow', String(err), platform);
+    logError('handleFollowed:follow', String(err) + ' id=' + userId, platform);
   }
 }
 
