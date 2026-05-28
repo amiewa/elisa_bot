@@ -297,6 +297,9 @@ function createMisskeyAdapter_() {
 
     verifyWebhookSignature: function (secret, sigHeader, rawBody) {
       if (!secret) return true;
+      // GAS Web Apps は HTTP ヘッダを読み取れないため sigHeader は常に空文字になる。
+      // ヘッダが届かない環境では URL の秘匿性に委ねて検証をスキップする。
+      if (!sigHeader) return true;
       var digest = Utilities.computeHmacSha256Signature(rawBody, secret);
       var hex = digest.map(function (b) {
         return ('0' + (b & 0xff).toString(16)).slice(-2);
