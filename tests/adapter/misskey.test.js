@@ -284,33 +284,6 @@ describe('misskeyAdapter pagination', () => {
 });
 
 // ----------------------------------------------------------------
-// Misskey アダプタ — verifyWebhookSignature
-// ----------------------------------------------------------------
-describe('misskeyAdapter.verifyWebhookSignature', () => {
-  test('シークレットが空なら常に true', () => {
-    const adapter = createMisskeyAdapter_();
-    expect(adapter.verifyWebhookSignature('', 'anysig', 'body')).toBe(true);
-  });
-
-  test('正しい署名なら true', () => {
-    // Utilities.computeHmacSha256Signature をモック
-    global.Utilities = {
-      computeHmacSha256Signature: jest.fn(() => [0xab, 0xcd]),
-    };
-    const adapter = createMisskeyAdapter_();
-    expect(adapter.verifyWebhookSignature('secret', 'abcd', 'body')).toBe(true);
-  });
-
-  test('不正な署名なら false', () => {
-    global.Utilities = {
-      computeHmacSha256Signature: jest.fn(() => [0xab, 0xcd]),
-    };
-    const adapter = createMisskeyAdapter_();
-    expect(adapter.verifyWebhookSignature('secret', '0000', 'body')).toBe(false);
-  });
-});
-
-// ----------------------------------------------------------------
 // makeApiError_
 // ----------------------------------------------------------------
 describe('makeApiError_', () => {

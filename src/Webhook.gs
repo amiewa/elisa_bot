@@ -33,21 +33,12 @@ function doPost(e) {
     return ContentService.createTextOutput('Bad Request').setMimeType(MIME);
   }
 
-  // Misskey 署名検証
+  // アダプタ生成
   var adapter;
   try {
     adapter = createAdapter(platform);
-    var sigHeader = (e.parameter && e.parameter['X-Misskey-Hook-Secret']) || '';
-    // GAS Web Apps ではヘッダが e.postData.headers に入る場合がある
-    if (!sigHeader && e.postData && e.postData.headers) {
-      sigHeader = e.postData.headers['X-Misskey-Hook-Secret'] || '';
-    }
-    var webhookSecret = getProp_('MISSKEY_WEBHOOK_SECRET', '');
-    if (!adapter.verifyWebhookSignature(webhookSecret, sigHeader, rawBody)) {
-      return ContentService.createTextOutput('Unauthorized').setMimeType(MIME);
-    }
   } catch (err) {
-    logError('doPost:verifySignature', String(err), platform);
+    logError('doPost:createAdapter', String(err), platform);
     return ContentService.createTextOutput('Internal Error').setMimeType(MIME);
   }
 

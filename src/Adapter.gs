@@ -295,18 +295,6 @@ function createMisskeyAdapter_() {
       return Array.isArray(data.emojis) ? data.emojis : [];
     },
 
-    verifyWebhookSignature: function (secret, sigHeader, rawBody) {
-      if (!secret) return true;
-      // GAS Web Apps は HTTP ヘッダを読み取れないため sigHeader は常に空文字になる。
-      // ヘッダが届かない環境では URL の秘匿性に委ねて検証をスキップする。
-      if (!sigHeader) return true;
-      var digest = Utilities.computeHmacSha256Signature(rawBody, secret);
-      var hex = digest.map(function (b) {
-        return ('0' + (b & 0xff).toString(16)).slice(-2);
-      }).join('');
-      return hex === sigHeader;
-    },
-
     parseNotification: function (event) {
       if (!event || !event.body) return null;
       var body = event.body;
@@ -516,11 +504,6 @@ function createMastodonAdapter_() {
     getCustomEmojis: function () {
       var res = api('/api/v1/custom_emojis', 'GET');
       return Array.isArray(res.data) ? res.data : [];
-    },
-
-    // Mastodon は doPost webhook を使わないため常に true を返す
-    verifyWebhookSignature: function () {
-      return true;
     },
 
     parseNotification: function (rawNotif) {
