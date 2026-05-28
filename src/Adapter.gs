@@ -276,7 +276,14 @@ function createMisskeyAdapter_() {
 
     getRelation: function (userId) {
       var data = api('/api/users/relation', { userId: userId });
-      return Array.isArray(data) ? data[0] : data;
+      var raw = Array.isArray(data) ? data[0] : data;
+      if (!raw) return null;
+      // Misskey は isFollowing/isFollowed を返す。呼び出し側と統一するため following に正規化する
+      return {
+        following: Boolean(raw.isFollowing !== undefined ? raw.isFollowing : raw.following),
+        followed_by: Boolean(raw.isFollowed !== undefined ? raw.isFollowed : raw.followed_by),
+        requested: Boolean(raw.hasPendingFollowRequestFromYou),
+      };
     },
 
     getMe: function () {

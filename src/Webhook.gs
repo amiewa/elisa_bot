@@ -119,6 +119,21 @@ function handleMention(note) {
     }
   } catch (_) {}
 
+  // --- キーワードフォローバック（MUTUAL_ONLY より前に評価）---
+  // MUTUAL_ONLY で返信をスキップする場合でもフォローバックは行う
+  var textForCheck = note.text_clean || note.text_raw || '';
+  if (checkKeywordFollowBack_(textForCheck) && note.author && !note.author.is_bot) {
+    try {
+      var relForKw = adapter.getRelation(note.author.id);
+      if (!relForKw || !relForKw.following) {
+        adapter.follow(note.author.id);
+        incrementCounter('FOLLOW_BACK', platform);
+      }
+    } catch (err) {
+      logError('handleMention:follow', String(err), platform);
+    }
+  }
+
   // --- MENTION_MUTUAL_ONLY 判定 ---
   if (parseBool(getConfig('MENTION_MUTUAL_ONLY', 'TRUE'), true) && note.author) {
     try {
@@ -169,17 +184,6 @@ function handleMention(note) {
   setProp_(userCountKey, String(userCount + 1));
   setProp_(globalKey, String(globalCount + 1));
   incrementCounter('REPLY', platform);
-
-  // --- キーワードフォローバック ---
-  var textForCheck = note.text_clean || note.text_raw || '';
-  if (checkKeywordFollowBack_(textForCheck) && note.author && !note.author.is_bot) {
-    try {
-      adapter.follow(note.author.id);
-      incrementCounter('FOLLOW_BACK', platform);
-    } catch (err) {
-      logError('handleMention:follow', String(err), platform);
-    }
-  }
 }
 
 // ===================================================================
