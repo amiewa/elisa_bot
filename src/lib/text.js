@@ -9,6 +9,8 @@
 function cleanNoteText(text) {
   if (!text) return '';
   var s = text;
+  // 0. 不可視文字を除去: U+00AD ソフトハイフン / U+200B-200F ZWS 等 / U+2060-2064 / U+FEFF BOM
+  s = s.replace(/[­​-‏⁠-⁤﻿]/g, '');
   // 1. Markdown リンク [label](url) → ラベルのみ残す
   s = s.replace(/\[([^\]]+)\]\(https?:\/\/\S+?\)/g, '$1');
   // 2. URL 除去

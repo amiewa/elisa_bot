@@ -23,6 +23,8 @@ function parseYahooResponse(responseJson) {
       var pos = String(tok[3]);
       if (EXCLUDED_POS.indexOf(pos) !== -1) continue;
       if (surface.length === 0) continue;
+      // 不可視文字のみのトークンは除去(Yahoo MA が U+200B 等を品詞判定する場合の防衛)
+      if (/^[­​-‏⁠-⁤﻿]+$/.test(surface)) continue;
       result.push(surface);
     }
     return result;

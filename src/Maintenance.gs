@@ -72,6 +72,12 @@ function runDailyMaintenance() {
     logError('runDailyMaintenance:cleanupProperties_', String(e), 'system');
   }
 
+  if (isTimeSafe(30000)) {
+    try { cleanNgramInvisibleTokens_(); } catch (e) {
+      logError('runDailyMaintenance:cleanNgramInvisibleTokens_', String(e), 'system');
+    }
+  }
+
   setProp_('LAST_MAINTENANCE_DATE', today);
 }
 
@@ -424,4 +430,35 @@ function _sampleArray_(arr, n) {
  */
 function cleanupProperties_() {
   cleanupOldCounters_();
+}
+
+// ===================================================================
+// N-gram 不可視文字クリーンアップ
+// ===================================================================
+
+/**
+ * N-gram シートから不可視文字(U+200B 等)を含む行を削除する。
+ * ゼロ幅スペース混入投稿を学習してしまった際の汚染トークンを除去する。
+ */
+function cleanNgramInvisibleTokens_() {
+  var sheet = getSheet_(SHEET.NGRAM);
+  if (!sheet) return;
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+
+  var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+  var toDelete = [];
+  var i;
+  for (i = 0; i < data.length; i++) {
+    var prev = String(data[i][0]);
+    var next = String(data[i][1]);
+    if (/[­​-‏⁠-⁤﻿]/.test(prev) || /[­​-‏⁠-⁤﻿]/.test(next)) {
+      toDelete.push(i + 2);
+    }
+  }
+
+  for (var d = toDelete.length - 1; d >= 0; d--) {
+    if (!isTimeSafe(10000)) break;
+    sheet.deleteRow(toDelete[d]);
+  }
 }

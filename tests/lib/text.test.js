@@ -115,6 +115,32 @@ describe('cleanNoteText', () => {
     });
   });
 
+  describe('不可視文字除去', () => {
+    test('U+200B(ゼロ幅スペース)のみの文字列は空になる', () => {
+      expect(cleanNoteText('​​​')).toBe('');
+    });
+
+    test('通常テキスト末尾のU+200Bを除去する', () => {
+      expect(cleanNoteText('疲れた​​')).toBe('疲れた');
+    });
+
+    test('テキスト内部のU+200Bを除去する', () => {
+      expect(cleanNoteText('テス​ト')).toBe('テスト');
+    });
+
+    test('U+FEFF(BOM)を除去する', () => {
+      expect(cleanNoteText('﻿テスト')).toBe('テスト');
+    });
+
+    test('U+200C/U+200D/U+200E/U+200Fを除去する', () => {
+      expect(cleanNoteText('a‌b‍c‎d‏f')).toBe('abcdf');
+    });
+
+    test('U+00AD(ソフトハイフン)を除去する', () => {
+      expect(cleanNoteText('テ­スト')).toBe('テスト');
+    });
+  });
+
   describe('エッジケース', () => {
     test('空文字列を返す（null 入力）', () => {
       expect(cleanNoteText(null)).toBe('');
