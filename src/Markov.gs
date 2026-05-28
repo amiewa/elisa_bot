@@ -161,7 +161,7 @@ function callYahooMA_(text, clientId) {
 function learnFromNotes_(notes, ngramStore) {
   if (!notes || notes.length === 0) return;
 
-  var excludeBots = getConfig('LEARN_EXCLUDE_BOTS', 'TRUE') === 'TRUE';
+  var excludeBots = parseBool(getConfig('LEARN_EXCLUDE_BOTS', 'TRUE'), true);
   var saveRaw     = parseInt(getConfig('LEARN_RAW_RETENTION_DAYS', '7'), 10) > 0;
   var platform    = getConfig('BOT_PLATFORM', 'misskey');
   var processedSheet = platform === 'mastodon'
@@ -176,6 +176,7 @@ function learnFromNotes_(notes, ngramStore) {
     var note = notes[i];
     if (!note || !note.id) continue;
     if (excludeBots && note.author && note.author.is_bot) continue;
+    if (note.author && note.author.is_self) continue;
     if (_isBlacklisted_(note, blacklist)) continue;
 
     var raw = note.text_clean || note.text_raw || '';

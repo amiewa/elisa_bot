@@ -43,6 +43,7 @@ npm run push
 2. メニュー **elisa_bot > 初期設定(シート作成)** を実行 — 12 シートが作成され、設定シートにデフォルト値が入力される
 3. **設定** シートを開き、各キーに値を入力する（[設定キー一覧](#設定キー一覧) 参照）
 4. メニュー **elisa_bot > API トークンの設定** を実行し、各トークンを保存する
+   - Yahoo! 形態素解析 API の Client ID は [Yahoo! デベロッパーネットワーク](https://developer.yahoo.co.jp/) でアプリを登録して取得する。取得した「アプリケーション ID」を入力する。HTTP 401 が発生する場合は、この Client ID が無効または誤って入力されている可能性が高い。
 5. メニュー **elisa_bot > 設定値の検証** を実行し、エラーがないことを確認する
 
 ### 5. トリガーの設定
@@ -128,8 +129,8 @@ GAS エディタ(拡張機能 > Apps Script)で以下のトリガーを追加す
 
 | キー | デフォルト | 説明 |
 |---|---|---|
-| `LEARN_TL_TYPE` | `local` | 学習するタイムライン: `local` / `home` / `hybrid` / `global` |
-| `LEARN_NOTES_PER_TRIGGER` | `50` | 1トリガーで処理する最大投稿数 |
+| `LEARN_TL_TYPE` | `local` | 学習するタイムライン: `local` / `home` / `hybrid` / `global`（Mastodon では `hybrid` は `global` と同じ扱い） |
+| `LEARN_NOTES_PER_TRIGGER` | `20` | 1トリガーで処理する最大投稿数 |
 | `LEARN_FROM_MENTIONS` | `FALSE` | メンションを学習対象にするか |
 | `LEARN_EXCLUDE_BOTS` | `TRUE` | bot 投稿を学習から除外するか |
 | `LEARN_RAW_RETENTION_DAYS` | `7` | 生学習データの保持日数（0 = 保持しない） |
@@ -227,7 +228,7 @@ GAS エディタ(拡張機能 > Apps Script)で以下のトリガーを追加す
 ## 開発コマンド
 
 ```sh
-npm test           # Jest ユニットテスト（218件）
+npm test           # Jest ユニットテスト（236件）
 npm run lint       # src/*.gs の ESLint
 npm run lint:lib   # src/lib/*.js + tests/ の ESLint
 npm run push       # GAS にプッシュ

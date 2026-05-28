@@ -183,7 +183,7 @@ function logError(functionName, message, platform) {
   // メール通知
   try {
     var enabled = getConfig('ERROR_NOTIFY_ENABLED');
-    if (enabled === 'TRUE' || enabled === 'true') {
+    if (parseBool(enabled, false)) {
       var email = getConfig('ERROR_NOTIFY_EMAIL');
       if (email && MailApp.getRemainingDailyQuota() > 0) {
         MailApp.sendEmail(

@@ -164,6 +164,63 @@ describe('misskeyAdapter.getTimeline', () => {
     const result = adapter.getTimeline({ max_pages: 1, max_items: 2 });
     expect(result).toHaveLength(2);
   });
+
+  test('LEARN_TL_TYPE=home → /api/notes/timeline を呼ぶ', () => {
+    global.getConfig = jest.fn((key, def) => {
+      if (key === 'MISSKEY_INSTANCE') return 'https://misskey.example';
+      if (key === 'LEARN_TL_TYPE') return 'home';
+      return def !== undefined ? def : '';
+    });
+    UrlFetchApp.setMockResponse('/api/notes/timeline', makeResponse([makeNote('h1')]));
+    const adapter = createMisskeyAdapter_();
+    const result = adapter.getTimeline({ max_pages: 1 });
+    expect(result).toHaveLength(1);
+    const req = UrlFetchApp._requests.find(r => r.url.includes('/api/notes/timeline'));
+    expect(req).toBeDefined();
+    expect(req.url).not.toContain('local-timeline');
+  });
+
+  test('LEARN_TL_TYPE=hybrid → /api/notes/hybrid-timeline を呼ぶ', () => {
+    global.getConfig = jest.fn((key, def) => {
+      if (key === 'MISSKEY_INSTANCE') return 'https://misskey.example';
+      if (key === 'LEARN_TL_TYPE') return 'hybrid';
+      return def !== undefined ? def : '';
+    });
+    UrlFetchApp.setMockResponse('/api/notes/hybrid-timeline', makeResponse([makeNote('hy1')]));
+    const adapter = createMisskeyAdapter_();
+    const result = adapter.getTimeline({ max_pages: 1 });
+    expect(result).toHaveLength(1);
+    const req = UrlFetchApp._requests.find(r => r.url.includes('/api/notes/hybrid-timeline'));
+    expect(req).toBeDefined();
+  });
+
+  test('LEARN_TL_TYPE=global → /api/notes/global-timeline を呼ぶ', () => {
+    global.getConfig = jest.fn((key, def) => {
+      if (key === 'MISSKEY_INSTANCE') return 'https://misskey.example';
+      if (key === 'LEARN_TL_TYPE') return 'global';
+      return def !== undefined ? def : '';
+    });
+    UrlFetchApp.setMockResponse('/api/notes/global-timeline', makeResponse([makeNote('g1'), makeNote('g2')]));
+    const adapter = createMisskeyAdapter_();
+    const result = adapter.getTimeline({ max_pages: 1 });
+    expect(result).toHaveLength(2);
+    const req = UrlFetchApp._requests.find(r => r.url.includes('/api/notes/global-timeline'));
+    expect(req).toBeDefined();
+  });
+
+  test('未知の LEARN_TL_TYPE → /api/notes/local-timeline にフォールバック', () => {
+    global.getConfig = jest.fn((key, def) => {
+      if (key === 'MISSKEY_INSTANCE') return 'https://misskey.example';
+      if (key === 'LEARN_TL_TYPE') return 'unknown';
+      return def !== undefined ? def : '';
+    });
+    UrlFetchApp.setMockResponse('/api/notes/local-timeline', makeResponse([makeNote('fb1')]));
+    const adapter = createMisskeyAdapter_();
+    const result = adapter.getTimeline({ max_pages: 1 });
+    expect(result).toHaveLength(1);
+    const req = UrlFetchApp._requests.find(r => r.url.includes('/api/notes/local-timeline'));
+    expect(req).toBeDefined();
+  });
 });
 
 // ----------------------------------------------------------------

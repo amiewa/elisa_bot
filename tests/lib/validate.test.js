@@ -1,5 +1,5 @@
 'use strict';
-const { validateConfigValues } = require('../../src/lib/validate');
+const { validateConfigValues, parseBool } = require('../../src/lib/validate');
 
 // デフォルト設定の最小構成（全バリデーションが通るベースライン）
 const base = {
@@ -99,4 +99,25 @@ describe('validateConfigValues', () => {
     test('30 → NG(enum外)', () =>
       invalid({ BOT_PLATFORM: 'mastodon', MASTODON_POLLING_INTERVAL_MIN: '30' }));
   });
+});
+
+describe('parseBool', () => {
+  test("'TRUE' → true", () => expect(parseBool('TRUE')).toBe(true));
+  test("'true' → true", () => expect(parseBool('true')).toBe(true));
+  test("'True' → true", () => expect(parseBool('True')).toBe(true));
+  test("'TRUE ' (末尾空白) → true", () => expect(parseBool('TRUE ')).toBe(true));
+  test("' true' (先頭空白) → true", () => expect(parseBool(' true')).toBe(true));
+  test("'FALSE' → false", () => expect(parseBool('FALSE')).toBe(false));
+  test("'false' → false", () => expect(parseBool('false')).toBe(false));
+  test("'' → defaultBool", () => {
+    expect(parseBool('', true)).toBe(true);
+    expect(parseBool('', false)).toBe(false);
+  });
+  test('undefined → defaultBool', () => {
+    expect(parseBool(undefined, true)).toBe(true);
+    expect(parseBool(undefined, false)).toBe(false);
+    expect(parseBool(undefined)).toBe(false);
+  });
+  test('null → defaultBool', () => expect(parseBool(null, true)).toBe(true));
+  test("'1' → false (TRUE のみ真)", () => expect(parseBool('1')).toBe(false));
 });

@@ -11,7 +11,7 @@
  * LockService で二重実行を防止する。
  */
 function onHourlyTrigger() {
-  if (getConfig('BOT_ACTIVE', 'FALSE') !== 'TRUE') return;
+  if (!parseBool(getConfig('BOT_ACTIVE', 'FALSE'), false)) return;
 
   var lock = LockService.getScriptLock();
   try {
@@ -72,8 +72,8 @@ function mainDispatcher() {
 function processLearn() {
   var platform = getConfig('BOT_PLATFORM', 'misskey');
   var adapter = createAdapter(platform);
-  var notesPerTrigger = parseInt(getConfig('LEARN_NOTES_PER_TRIGGER', '50'), 10);
-  var learnFromMentions = getConfig('LEARN_FROM_MENTIONS', 'FALSE') === 'TRUE';
+  var notesPerTrigger = parseInt(getConfig('LEARN_NOTES_PER_TRIGGER', '20'), 10);
+  var learnFromMentions = parseBool(getConfig('LEARN_FROM_MENTIONS', 'FALSE'), false);
   var ownUserId = getProp_('OWN_USER_ID', '');
 
   // TL 取得

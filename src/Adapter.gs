@@ -235,7 +235,13 @@ function createMisskeyAdapter_() {
     getTimeline: function (opts) {
       var o = opts || {};
       var tlType = getConfig('LEARN_TL_TYPE', 'local');
-      var ep = tlType === 'home' ? '/api/notes/timeline' : '/api/notes/local-timeline';
+      var epMap = {
+        home:   '/api/notes/timeline',
+        local:  '/api/notes/local-timeline',
+        hybrid: '/api/notes/hybrid-timeline',
+        global: '/api/notes/global-timeline'
+      };
+      var ep = epMap[tlType] || '/api/notes/local-timeline';
       return fetchPaginated(ep, {}, o.max_pages || 1, o.max_items);
     },
 
@@ -382,7 +388,20 @@ function createMastodonAdapter_() {
 
     getTimeline: function (opts) {
       var o = opts || {};
-      return fetchPaginated('/api/v1/timelines/home', {}, o.max_pages || 1, o.max_items);
+      var tlType = getConfig('LEARN_TL_TYPE', 'local');
+      var ep, baseQuery;
+      if (tlType === 'local') {
+        ep = '/api/v1/timelines/public';
+        baseQuery = { local: true };
+      } else if (tlType === 'global' || tlType === 'hybrid') {
+        ep = '/api/v1/timelines/public';
+        baseQuery = {};
+      } else {
+        // home (既定)
+        ep = '/api/v1/timelines/home';
+        baseQuery = {};
+      }
+      return fetchPaginated(ep, baseQuery, o.max_pages || 1, o.max_items);
     },
 
     getMentions: function (opts) {

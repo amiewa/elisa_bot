@@ -144,6 +144,18 @@ function validateConfigValues(configMap) {
   return errors;
 }
 
+/**
+ * 設定値の文字列をブール値に変換する純粋関数。
+ * 大文字小文字・前後空白を無視して 'TRUE' と一致すれば true。
+ * @param {*} value
+ * @param {boolean} [defaultBool=false]
+ * @returns {boolean}
+ */
+function parseBool(value, defaultBool) {
+  if (value === undefined || value === null || value === '') return !!defaultBool;
+  return String(value).trim().toUpperCase() === 'TRUE';
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { validateConfigValues };
+  module.exports = { validateConfigValues, parseBool };
 }

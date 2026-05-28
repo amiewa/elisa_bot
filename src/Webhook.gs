@@ -12,7 +12,7 @@ function doPost(e) {
   var platform = 'misskey';
 
   // webhook 無効時はスキップ
-  if (getConfig('MISSKEY_WEBHOOK_ENABLED', 'TRUE') !== 'TRUE') {
+  if (!parseBool(getConfig('MISSKEY_WEBHOOK_ENABLED', 'TRUE'), true)) {
     return ContentService.createTextOutput('Disabled').setMimeType(MIME);
   }
 
@@ -78,9 +78,9 @@ function handleMention(note) {
   var noteId = String(note.id);
 
   // --- 各種有効判定 ---
-  if (getConfig('MENTION_ENABLED', 'TRUE') !== 'TRUE') return;
+  if (!parseBool(getConfig('MENTION_ENABLED', 'TRUE'), true)) return;
 
-  var excludeBots = getConfig('MENTION_EXCLUDE_BOTS', 'TRUE') === 'TRUE';
+  var excludeBots = parseBool(getConfig('MENTION_EXCLUDE_BOTS', 'TRUE'), true);
   if (excludeBots && note.author && note.author.is_bot) return;
 
   // --- アダプタ生成（Layer 3 / MUTUAL_ONLY / postNote で共用）---
@@ -114,7 +114,7 @@ function handleMention(note) {
   } catch (_) {}
 
   // --- MENTION_MUTUAL_ONLY 判定 ---
-  if (getConfig('MENTION_MUTUAL_ONLY', 'TRUE') === 'TRUE' && note.author) {
+  if (parseBool(getConfig('MENTION_MUTUAL_ONLY', 'TRUE'), true) && note.author) {
     try {
       var rel = adapter.getRelation(note.author.id);
       if (!rel || !rel.following) return;
@@ -198,7 +198,7 @@ function _markProcessed_(cacheKey) {
  * @returns {boolean}
  */
 function checkKeywordFollowBack_(text) {
-  if (getConfig('FOLLOW_KEYWORD_ENABLED', 'TRUE') !== 'TRUE') return false;
+  if (!parseBool(getConfig('FOLLOW_KEYWORD_ENABLED', 'TRUE'), true)) return false;
   var keywords = getConfig('FOLLOW_KEYWORDS', 'フォローして,followして,相互フォロー');
   if (!keywords) return false;
 

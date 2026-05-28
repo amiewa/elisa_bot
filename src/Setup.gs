@@ -16,6 +16,8 @@ function onOpen() {
     .addItem('プラットフォーム切替後のクリーンアップ', 'cleanupAfterPlatformSwitch')
     .addSeparator()
     .addItem('[手動] 設定シート内容を確認', 'testShowConfig')
+    .addSeparator()
+    .addItem('[危険] 全データ初期化(ファクトリーリセット)', 'factoryReset')
     .addToUi();
 }
 
@@ -118,7 +120,7 @@ var CONFIG_DEFAULTS_ = [
   ['NGRAM_PRUNE_THRESHOLD',           '45000',     'これを超えたら剪定起動'],
   ['NGRAM_PRUNE_DECAY',               '0.05',      'score = log(count) - 経過日数 * decay'],
   ['LEARN_TL_TYPE',                   'local',     'local / home / hybrid / global'],
-  ['LEARN_NOTES_PER_TRIGGER',         '50',        '1トリガーで処理する最大投稿数'],
+  ['LEARN_NOTES_PER_TRIGGER',         '20',        '1トリガーで処理する最大投稿数'],
   ['LEARN_FROM_MENTIONS',             'FALSE',     'メンションを学習対象にするか'],
   ['LEARN_EXCLUDE_BOTS',              'TRUE',      'bot投稿を学習対象から除外'],
   ['LEARN_RAW_RETENTION_DAYS',        '7',         '生学習データ保持日数(0=保持しない)'],
@@ -353,6 +355,85 @@ function cleanupAfterPlatformSwitch() {
   if (dashSheet) dashSheet.setTabColor(null);
 
   ui.alert('クリーンアップが完了しました。');
+}
+
+// ===================================================================
+// ファクトリーリセット
+// ===================================================================
+
+/**
+ * 全シートのデータ・設定・APIトークン類を含むスクリプトプロパティをすべて削除し、
+ * 設定シートをデフォルト値で再構成する。操作は二段確認で保護される。
+ */
+function factoryReset() {
+  var ui = SpreadsheetApp.getUi();
+
+  // 第1確認: 内容説明と OK/CANCEL
+  var first = ui.alert(
+    '[危険] 全データ初期化(ファクトリーリセット)',
+    '以下をすべて削除・初期化します:\n' +
+    '・全シートのデータ行(ヘッダは保持)\n' +
+    '・全設定値(デフォルトに戻す)\n' +
+    '・APIトークン / Webhookシークレット\n' +
+    '・キャッシュ・内部カウンタ\n\n' +
+    'この操作は元に戻せません。続行しますか？',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (first !== ui.Button.OK) return;
+
+  // 第2確認: "初期化" とタイプさせて誤操作を防止
+  var second = ui.prompt(
+    '最終確認',
+    '本当に実行するには「初期化」と入力してください:',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (second.getSelectedButton() !== ui.Button.OK) return;
+  if (second.getResponseText().trim() !== '初期化') {
+    ui.alert('入力が一致しないため、初期化を中止しました。');
+    return;
+  }
+
+  try {
+    // 1. スクリプトプロパティ全削除(トークン・秘密鍵・カウンタ含む)
+    PropertiesService.getScriptProperties().deleteAllProperties();
+
+    // 2. 全シートのデータ行クリア(ヘッダ保持)
+    var sheetDefs = getSheetDefinitions_();
+    for (var i = 0; i < sheetDefs.length; i++) {
+      ensureSheet_(sheetDefs[i]);
+      var sheet = getSheet_(sheetDefs[i].name);
+      if (!sheet) continue;
+      var lastRow = sheet.getLastRow();
+      if (lastRow > 1) {
+        sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).clearContent();
+      }
+    }
+
+    // 3. 設定をデフォルト値で再投入(クリア後なので全行が入る)
+    initConfigSheet_();
+
+    // 4. シート装飾を再適用
+    decorateDashboard_();
+    decorateErrorLog_();
+    var dashSheet = getSheet_(SHEET.DASHBOARD);
+    if (dashSheet) dashSheet.setTabColor(null);
+
+    // 5. キャッシュ全消去
+    clearConfigCache_();
+
+    ui.alert(
+      '初期化完了',
+      '全データを初期化しました。\n\n' +
+      'APIトークン類も削除されています。メニューの「API トークンの設定」から\n' +
+      'MISSKEY_TOKEN / MASTODON_TOKEN / YAHOO_CLIENT_ID を再登録してください。\n\n' +
+      'Misskey の Webhook を利用している場合は、Webhook シークレットも再生成して\n' +
+      'Misskey 側の設定を更新してください。',
+      ui.ButtonSet.OK
+    );
+  } catch (e) {
+    logError('factoryReset', e.message, 'system');
+    ui.alert('エラーが発生しました: ' + e.message);
+  }
 }
 
 // ===================================================================

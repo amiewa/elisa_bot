@@ -85,7 +85,7 @@ function runDailyMaintenance() {
 function runFollowSync() {
   var platform = getConfig('BOT_PLATFORM', 'misskey');
   var adapter = createAdapter(platform);
-  var autoFollowBack = getConfig('FOLLOW_AUTO_FOLLOW_BACK', 'TRUE') === 'TRUE';
+  var autoFollowBack = parseBool(getConfig('FOLLOW_AUTO_FOLLOW_BACK', 'TRUE'), true);
   var graceCycles    = parseInt(getConfig('FOLLOW_UNFOLLOW_GRACE_CYCLES', '2'), 10);
 
   // フォロワー/フォロー中を取得
@@ -209,7 +209,7 @@ function runFollowSync() {
  * 投稿履歴の古い投稿を API 経由で削除する。MAINTENANCE_ENABLED ガード付き。
  */
 function executeAutoDelete() {
-  if (getConfig('MAINTENANCE_ENABLED', 'TRUE') !== 'TRUE') return;
+  if (!parseBool(getConfig('MAINTENANCE_ENABLED', 'TRUE'), true)) return;
 
   var retentionDays = parseInt(getConfig('MAINTENANCE_CLEANUP_DAYS', '30'), 10);
   var sheet = getSheet_(SHEET.POST_HISTORY);

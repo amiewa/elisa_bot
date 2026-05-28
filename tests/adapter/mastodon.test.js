@@ -203,6 +203,50 @@ describe('mastodonAdapter.getTimeline', () => {
     const result = adapter.getTimeline({ max_pages: 1, max_items: 2 });
     expect(result).toHaveLength(2);
   });
+
+  test('LEARN_TL_TYPE=local → /api/v1/timelines/public?local=true を呼ぶ', () => {
+    global.getConfig = jest.fn((key, def) => {
+      if (key === 'MASTODON_INSTANCE') return 'https://mstdn.example';
+      if (key === 'LEARN_TL_TYPE') return 'local';
+      return def !== undefined ? def : '';
+    });
+    UrlFetchApp.setMockResponse('/api/v1/timelines/public', makeResponse([makeStatus('l1')]));
+    const adapter = createMastodonAdapter_();
+    const result = adapter.getTimeline({ max_pages: 1 });
+    expect(result).toHaveLength(1);
+    const req = UrlFetchApp._requests.find(r => r.url.includes('/api/v1/timelines/public'));
+    expect(req).toBeDefined();
+    expect(req.url).toContain('local=true');
+  });
+
+  test('LEARN_TL_TYPE=global → /api/v1/timelines/public (local クエリなし)', () => {
+    global.getConfig = jest.fn((key, def) => {
+      if (key === 'MASTODON_INSTANCE') return 'https://mstdn.example';
+      if (key === 'LEARN_TL_TYPE') return 'global';
+      return def !== undefined ? def : '';
+    });
+    UrlFetchApp.setMockResponse('/api/v1/timelines/public', makeResponse([makeStatus('g1')]));
+    const adapter = createMastodonAdapter_();
+    const result = adapter.getTimeline({ max_pages: 1 });
+    expect(result).toHaveLength(1);
+    const req = UrlFetchApp._requests.find(r => r.url.includes('/api/v1/timelines/public'));
+    expect(req).toBeDefined();
+    expect(req.url).not.toContain('local=true');
+  });
+
+  test('LEARN_TL_TYPE=hybrid → /api/v1/timelines/public (global と同じ扱い)', () => {
+    global.getConfig = jest.fn((key, def) => {
+      if (key === 'MASTODON_INSTANCE') return 'https://mstdn.example';
+      if (key === 'LEARN_TL_TYPE') return 'hybrid';
+      return def !== undefined ? def : '';
+    });
+    UrlFetchApp.setMockResponse('/api/v1/timelines/public', makeResponse([makeStatus('hy1')]));
+    const adapter = createMastodonAdapter_();
+    const result = adapter.getTimeline({ max_pages: 1 });
+    expect(result).toHaveLength(1);
+    const req = UrlFetchApp._requests.find(r => r.url.includes('/api/v1/timelines/public'));
+    expect(req).toBeDefined();
+  });
 });
 
 // ----------------------------------------------------------------
