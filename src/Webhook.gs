@@ -121,22 +121,29 @@ function handleMention(note) {
   // --- 3層重複防止 ---
   var cacheKey = 'PM_' + noteId;
 
-  // Layer 1: CacheService（6時間）
+  // Layer 1: CacheService（高速・非原子的）
   try {
     if (CacheService.getScriptCache().get(cacheKey)) return;
   } catch (_) {}
 
-  // Layer 2: PropertiesService（永続）
-  if (getProp_(cacheKey)) return;
+  // Layer 2: LockService + PropertiesService（原子的チェック＆セット）
+  // 同一ノートへの並行実行（mention + reply の同時 webhook）で両方すり抜けるのを防ぐ
+  var lock = LockService.getScriptLock();
+  var lockAcquired = lock.tryLock(1500);
+  if (!lockAcquired) return; // 他の実行が処理中 → 重複の可能性があるためスキップ
+  try {
+    if (getProp_(cacheKey)) return;
+    // 処理開始を先にマーク（Layer 3 より前に確定させてレースを潰す）
+    setProp_(cacheKey, '1');
+    try { CacheService.getScriptCache().put(cacheKey, '1', 21600); } catch (_) {}
+  } finally {
+    lock.releaseLock();
+  }
 
   // Layer 3: API（getRepliesTo）— コスト高いため最後に確認
   try {
     var replies = adapter.getRepliesTo(noteId);
-    if (replies && replies.length > 0) {
-      // 既返信済みをマーク
-      _markProcessed_(cacheKey);
-      return;
-    }
+    if (replies && replies.length > 0) return; // 既に返信済み
   } catch (_) {}
 
   // --- フォロー関係を一度だけ取得（キーワードFB + MUTUAL_ONLY で共用）---
@@ -209,8 +216,7 @@ function handleMention(note) {
     return;
   }
 
-  // --- 処理済みマーク / カウンタ更新 ---
-  _markProcessed_(cacheKey);
+  // --- カウンタ更新（処理済みマークは Layer 2 で実施済み）---
   setProp_(userCountKey, String(userCount + 1));
   setProp_(globalKey, String(globalCount + 1));
   incrementCounter('REPLY', platform);
@@ -263,17 +269,7 @@ function handleFollowed(unified, adapter, platform) {
   }
 }
 
-/**
- * 処理済みフラグを CacheService と PropertiesService に記録する。
- */
-function _markProcessed_(cacheKey) {
-  try {
-    CacheService.getScriptCache().put(cacheKey, '1', 21600); // 6時間
-  } catch (_) {}
-  try {
-    setProp_(cacheKey, '1');
-  } catch (_) {}
-}
+
 
 // ===================================================================
 // キーワードフォローバック判定
