@@ -58,6 +58,12 @@ function doPost(e) {
     } catch (err) {
       logError('doPost:handleMention', String(err), platform);
     }
+  } else if (unified && unified._notif_type === 'followed') {
+    try {
+      handleFollowed(unified, adapter, platform);
+    } catch (err) {
+      logError('doPost:handleFollowed', String(err), platform);
+    }
   }
 
   return ContentService.createTextOutput('OK').setMimeType(MIME);
@@ -173,6 +179,37 @@ function handleMention(note) {
     } catch (err) {
       logError('handleMention:follow', String(err), platform);
     }
+  }
+}
+
+// ===================================================================
+// フォローバック処理
+// ===================================================================
+
+/**
+ * followed イベントを受け取り、FOLLOW_AUTO_FOLLOW_BACK が有効ならフォローバックする。
+ * @param {object} unified  parseNotification が返す unified オブジェクト
+ * @param {object} adapter  createAdapter() で生成済みのアダプタ
+ * @param {string} platform
+ */
+function handleFollowed(unified, adapter, platform) {
+  if (!parseBool(getConfig('FOLLOW_AUTO_FOLLOW_BACK', 'TRUE'), true)) return;
+  if (!unified.author || !unified.author.id) return;
+  if (unified.author.is_bot && parseBool(getConfig('MENTION_EXCLUDE_BOTS', 'TRUE'), true)) return;
+
+  var userId = unified.author.id;
+
+  // 既にフォロー中なら重複してフォローしない
+  try {
+    var rel = adapter.getRelation(userId);
+    if (rel && rel.following) return;
+  } catch (_) {}
+
+  try {
+    adapter.follow(userId);
+    incrementCounter('FOLLOW_BACK', platform);
+  } catch (err) {
+    logError('handleFollowed:follow', String(err), platform);
   }
 }
 

@@ -302,7 +302,26 @@ function createMisskeyAdapter_() {
       var body = event.body;
       var type = body.type;
       var note = body.note || body.body;
-      if (!note) return null;
+
+      if (!note) {
+        // 'followed' イベント: body.user にフォロワー情報が入る
+        if (type === 'followed' && body.user) {
+          var u = body.user;
+          return {
+            _notif_type: type,
+            id: String(body.id || ''),
+            platform: 'misskey',
+            author: {
+              id: String(u.id || body.userId || ''),
+              acct: u.username || '',
+              is_bot: Boolean(u.isBot),
+              is_self: false,
+            },
+          };
+        }
+        return null;
+      }
+
       var unified = toUnified(note);
       if (unified) unified._notif_type = type;
       return unified;
