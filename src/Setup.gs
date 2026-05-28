@@ -18,6 +18,8 @@ function onOpen() {
     .addItem('[手動] 設定シート内容を確認', 'testShowConfig')
     .addSeparator()
     .addItem('[危険] 全データ初期化(ファクトリーリセット)', 'factoryReset')
+    .addSeparator()
+    .addItem('[デバッグ] 最後のWebhookイベント確認', 'showLastWebhookEvent')
     .addToUi();
 }
 
@@ -439,6 +441,12 @@ function factoryReset() {
 // ===================================================================
 // 手動テスト関数
 // ===================================================================
+
+function showLastWebhookEvent() {
+  var ui = SpreadsheetApp.getUi();
+  var val = PropertiesService.getScriptProperties().getProperty('DEBUG_LAST_EVENT') || '(なし)';
+  ui.alert('[デバッグ] 最後のWebhookイベント', val, ui.ButtonSet.OK);
+}
 
 function testShowConfig() {
   var ui = SpreadsheetApp.getUi();

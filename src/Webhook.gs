@@ -52,6 +52,17 @@ function doPost(e) {
     return ContentService.createTextOutput('Parse Error').setMimeType(MIME);
   }
 
+  // デバッグ: PropertiesService にイベント情報を記録（スプレッドシート不要）
+  try {
+    var dbgType = unified ? (unified._notif_type || 'no_type') : 'null';
+    var dbgAuthor = unified && unified.author ? unified.author.id : '-';
+    var dbgRaw = JSON.stringify(JSON.parse(rawBody)).slice(0, 300);
+    PropertiesService.getScriptProperties().setProperty(
+      'DEBUG_LAST_EVENT',
+      new Date().toISOString() + ' type=' + dbgType + ' author=' + dbgAuthor + ' raw=' + dbgRaw
+    );
+  } catch (_) {}
+
   if (unified && unified._notif_type === 'mention') {
     try {
       handleMention(unified);
