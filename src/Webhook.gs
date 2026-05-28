@@ -11,6 +11,15 @@ function doPost(e) {
   var MIME = ContentService.MimeType.TEXT;
   var platform = 'misskey';
 
+  // デバッグ: 最初の到達確認（他の処理に関係なく記録）
+  try {
+    var rawForDbg = (e && e.postData) ? e.postData.getDataAsString() : '(no postData)';
+    PropertiesService.getScriptProperties().setProperty(
+      'DEBUG_DOPOST_ENTRY',
+      new Date().toISOString() + ' len=' + rawForDbg.length + ' preview=' + rawForDbg.slice(0, 200)
+    );
+  } catch (_) {}
+
   // webhook 無効時はスキップ
   if (!parseBool(getConfig('MISSKEY_WEBHOOK_ENABLED', 'TRUE'), true)) {
     return ContentService.createTextOutput('Disabled').setMimeType(MIME);

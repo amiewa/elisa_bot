@@ -444,8 +444,13 @@ function factoryReset() {
 
 function showLastWebhookEvent() {
   var ui = SpreadsheetApp.getUi();
-  var val = PropertiesService.getScriptProperties().getProperty('DEBUG_LAST_EVENT') || '(なし)';
-  ui.alert('[デバッグ] 最後のWebhookイベント', val, ui.ButtonSet.OK);
+  var entry = PropertiesService.getScriptProperties().getProperty('DEBUG_DOPOST_ENTRY') || '(なし)';
+  var event = PropertiesService.getScriptProperties().getProperty('DEBUG_LAST_EVENT') || '(なし)';
+  ui.alert(
+    '[デバッグ] Webhookイベント診断',
+    'doPost到達:\n' + entry + '\n\n---\nパース結果:\n' + event,
+    ui.ButtonSet.OK
+  );
 }
 
 function testShowConfig() {
