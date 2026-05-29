@@ -135,6 +135,8 @@ GAS エディタ(拡張機能 > Apps Script)で以下のトリガーを追加す
 | `LEARN_EXCLUDE_BOTS` | `TRUE` | bot 投稿を学習から除外するか |
 | `LEARN_RAW_RETENTION_DAYS` | `7` | 生学習データの保持日数（0 = 保持しない） |
 
+**常時除外（設定不要）**: フォロワー限定投稿（`followers`/`private`）とDM（`specified`/`direct`）はプライバシー保護のため学習対象から常に除外される。`public`・`home`（Misskey）・`unlisted`（Mastodon）のみ学習対象。
+
 ### 形態素解析
 
 | キー | デフォルト | 説明 |

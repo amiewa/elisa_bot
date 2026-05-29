@@ -304,3 +304,35 @@ describe('mastodonNotificationToUnified', () => {
     expect(mastodonNotificationToUnified(null, ownUserId, ownHost)).toBeNull();
   });
 });
+
+// ----------------------------------------------------------------
+// isRestrictedVisibility
+// ----------------------------------------------------------------
+describe('isRestrictedVisibility', () => {
+  test('Misskey フォロワー限定(followers)・DM(specified)は除外対象', () => {
+    expect(isRestrictedVisibility('followers')).toBe(true);
+    expect(isRestrictedVisibility('specified')).toBe(true);
+  });
+
+  test('Mastodon フォロワー限定(private)・DM(direct)は除外対象', () => {
+    expect(isRestrictedVisibility('private')).toBe(true);
+    expect(isRestrictedVisibility('direct')).toBe(true);
+  });
+
+  test('public / home / unlisted は学習対象（除外しない）', () => {
+    expect(isRestrictedVisibility('public')).toBe(false);
+    expect(isRestrictedVisibility('home')).toBe(false);
+    expect(isRestrictedVisibility('unlisted')).toBe(false);
+  });
+
+  test('空値(undefined/null/空文字)は除外しない', () => {
+    expect(isRestrictedVisibility(undefined)).toBe(false);
+    expect(isRestrictedVisibility(null)).toBe(false);
+    expect(isRestrictedVisibility('')).toBe(false);
+  });
+
+  test('大文字混在でも正しく判定する', () => {
+    expect(isRestrictedVisibility('Followers')).toBe(true);
+    expect(isRestrictedVisibility('DIRECT')).toBe(true);
+  });
+});

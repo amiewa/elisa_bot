@@ -67,6 +67,7 @@
     "misskeyNoteToUnified": "readonly",
     "mastodonNoteToUnified": "readonly",
     "mastodonNotificationToUnified": "readonly",
+    "isRestrictedVisibility": "readonly",
     "stripHtml": "readonly",
     "normalizeAcct": "readonly",
 
