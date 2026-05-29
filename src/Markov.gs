@@ -180,6 +180,8 @@ function learnFromNotes_(notes, ngramStore) {
     if (excludeBots && note.author && note.author.is_bot) continue;
     if (note.author && note.author.is_self) continue;
     if (_isBlacklisted_(note, blacklist)) continue;
+    // フォロワー限定投稿・DM はプライバシー保護のため学習除外
+    if (isRestrictedVisibility(note.visibility)) continue;
 
     var raw = note.text_clean || note.text_raw || '';
     var cleaned = cleanNoteText(raw);

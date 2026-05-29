@@ -7,6 +7,7 @@ const {
   misskeyNoteToUnified,
   mastodonNoteToUnified,
   mastodonNotificationToUnified,
+  isRestrictedVisibility,
 } = require('../../src/lib/adapter');
 
 // ----------------------------------------------------------------

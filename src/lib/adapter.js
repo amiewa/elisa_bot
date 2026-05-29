@@ -173,6 +173,23 @@ function mastodonNotificationToUnified(rawNotif, ownUserId, ownHost) {
   return unified;
 }
 
+/**
+ * 学習除外すべき公開範囲（フォロワー限定・DM）かを判定する純粋関数。
+ * Misskey/Mastodon 両プラットフォームの生 visibility 値に対応する。
+ * - フォロワー限定: Misskey `followers` / Mastodon `private`
+ * - DM(ダイレクト): Misskey `specified` / Mastodon `direct`
+ * `public` / `home`(ホーム) / `unlisted`(未収載) は学習対象として許可する。
+ * @param {string} visibility - UnifiedNote.visibility（プラットフォーム別生値）
+ * @returns {boolean} 除外対象なら true
+ */
+function isRestrictedVisibility(visibility) {
+  return (
+    ['followers', 'specified', 'private', 'direct'].indexOf(
+      String(visibility || '').toLowerCase()
+    ) !== -1
+  );
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     stripHtml,
@@ -182,5 +199,6 @@ if (typeof module !== 'undefined' && module.exports) {
     misskeyNoteToUnified,
     mastodonNoteToUnified,
     mastodonNotificationToUnified,
+    isRestrictedVisibility,
   };
 }
