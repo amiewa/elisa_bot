@@ -33,6 +33,8 @@ NGramStore.prototype.load = function (rows) {
     var count = parseInt(row[2], 10) || 0;
     var lastUsedAt = row[3] ? String(row[3]) : new Date().toISOString();
     if (!prev || !next) continue;
+    // Google スプレッドシートのエラーリテラルを含む行はスキップ（#ERROR! 等）
+    if (isSheetsError(prev) || isSheetsError(next)) continue;
     if (!this._data.has(prev)) this._data.set(prev, new Map());
     this._data.get(prev).set(next, { count: count, lastUsedAt: lastUsedAt });
   }
@@ -143,6 +145,16 @@ Object.defineProperty(NGramStore.prototype, 'size', {
 // =====================================================================
 // 純粋関数
 // =====================================================================
+
+/**
+ * Google スプレッドシートのエラーリテラル（#ERROR! 等）かどうかを判定する。
+ * NGramStore.load でエラーセルをトークンとして取り込まないためのガード。
+ * @param {string} token
+ * @returns {boolean}
+ */
+function isSheetsError(token) {
+  return /^[#＃](ERROR!|REF!|NAME\?|VALUE!|DIV\/0!|N\/A|NUM!|NULL!|SPILL!|CALC!|GETTING_DATA)$/.test(token);
+}
 
 /**
  * LFU+LRU ハイブリッドスコアを計算する。
@@ -309,6 +321,7 @@ if (typeof module !== 'undefined' && module.exports) {
     NGramStore,
     BOS,
     EOS,
+    isSheetsError,
     calculateScore,
     pickNextToken,
     learn,

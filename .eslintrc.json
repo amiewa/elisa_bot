@@ -39,6 +39,9 @@
 
     "cleanNoteText": "readonly",
     "splitIntoSentences": "readonly",
+    "stripDecorations": "readonly",
+    "balanceBrackets": "readonly",
+    "sanitizeGeneratedText": "readonly",
     "parseYahooResponse": "readonly",
     "fallbackTokenize": "readonly",
     "calculateScore": "readonly",

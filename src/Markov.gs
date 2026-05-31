@@ -288,6 +288,8 @@ function generatePost_(ngramStore) {
   for (var attempt = 0; attempt < maxRetry; attempt++) {
     var text = generate(ngramStore, config, emojis, Math.random);
     if (!text) continue;
+    text = sanitizeGeneratedText(text); // 出力後処理: 装飾タグ・罫線・括弧整合・絵文字スペース等
+    if (!text) continue;
     if (containsNGWord(text, ngwords)) continue;
     if (_isDuplicate_(text, history, dupThreshold)) continue;
     return text;

@@ -3,6 +3,7 @@ const {
   NGramStore,
   BOS,
   EOS,
+  isSheetsError,
   calculateScore,
   pickNextToken,
   learn,
@@ -53,6 +54,35 @@ describe('NGramStore', () => {
       const store = new NGramStore();
       store.load([['a', 'b', 1, '2026-01-01T00:00:00.000Z']]);
       expect(store.getDirtyEntries()).toEqual([]);
+    });
+
+    test('#ERROR! を prev に含む行はスキップする', () => {
+      const store = new NGramStore();
+      store.load([
+        ['#ERROR!', '犬', 2, '2026-01-01T00:00:00.000Z'],
+        ['猫', '犬', 1, '2026-01-01T00:00:00.000Z'],
+      ]);
+      expect(store.size).toBe(1);
+    });
+
+    test('#ERROR! を next に含む行はスキップする', () => {
+      const store = new NGramStore();
+      store.load([
+        ['猫', '#ERROR!', 2, '2026-01-01T00:00:00.000Z'],
+        ['猫', '犬', 1, '2026-01-01T00:00:00.000Z'],
+      ]);
+      expect(store.size).toBe(1);
+    });
+
+    test('#REF! / #N/A / #VALUE! 等もスキップする', () => {
+      const store = new NGramStore();
+      store.load([
+        ['#REF!', '犬', 1, '2026-01-01T00:00:00.000Z'],
+        ['猫', '#N/A', 1, '2026-01-01T00:00:00.000Z'],
+        ['猫', '#VALUE!', 1, '2026-01-01T00:00:00.000Z'],
+        ['猫', '犬', 1, '2026-01-01T00:00:00.000Z'],
+      ]);
+      expect(store.size).toBe(1);
     });
   });
 
@@ -375,5 +405,55 @@ describe('injectEmojis', () => {
 
   test('sentences が空 → 空文字', () => {
     expect(injectEmojis([], [':a:'], 50, Math.random)).toBe('');
+  });
+});
+
+// =====================================================================
+// isSheetsError
+// =====================================================================
+
+describe('isSheetsError', () => {
+  test('#ERROR! は true', () => {
+    expect(isSheetsError('#ERROR!')).toBe(true);
+  });
+
+  test('#REF! は true', () => {
+    expect(isSheetsError('#REF!')).toBe(true);
+  });
+
+  test('#N/A は true', () => {
+    expect(isSheetsError('#N/A')).toBe(true);
+  });
+
+  test('#VALUE! は true', () => {
+    expect(isSheetsError('#VALUE!')).toBe(true);
+  });
+
+  test('#DIV/0! は true', () => {
+    expect(isSheetsError('#DIV/0!')).toBe(true);
+  });
+
+  test('#NAME? は true', () => {
+    expect(isSheetsError('#NAME?')).toBe(true);
+  });
+
+  test('#NULL! は true', () => {
+    expect(isSheetsError('#NULL!')).toBe(true);
+  });
+
+  test('通常のトークン（猫）は false', () => {
+    expect(isSheetsError('猫')).toBe(false);
+  });
+
+  test('空文字列は false', () => {
+    expect(isSheetsError('')).toBe(false);
+  });
+
+  test('#ERROR の途中（! なし）は false', () => {
+    expect(isSheetsError('#ERROR')).toBe(false);
+  });
+
+  test('ERROR! のみ（# なし）は false', () => {
+    expect(isSheetsError('ERROR!')).toBe(false);
   });
 });

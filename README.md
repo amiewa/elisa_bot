@@ -254,8 +254,8 @@ GAS 層（Google Apps Script）
 
 lib 層（Node.js でもテスト可能な純粋関数）
 ├─ adapter.js     UnifiedNote 変換・パース・認証ヘッダ構築
-├─ markov.js      NGramStore クラス・学習・生成・絵文字注入
-├─ text.js        テキスト前処理（8 ステップパイプライン）
+├─ markov.js      NGramStore クラス・学習・生成・絵文字注入（シートエラーセルガード付き）
+├─ text.js        テキスト前処理（学習入力: 9 ステップパイプライン）・生成後処理（sanitizeGeneratedText）
 ├─ morph.js       Yahoo 形態素解析レスポンス処理・フォールバック解析
 ├─ time.js        夜間判定・時間予算判定
 ├─ ngwords.js     NGワード判定・ジャッカード類似度

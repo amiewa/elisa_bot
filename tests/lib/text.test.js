@@ -1,5 +1,5 @@
 'use strict';
-const { cleanNoteText, splitIntoSentences } = require('../../src/lib/text');
+const { cleanNoteText, splitIntoSentences, stripDecorations, balanceBrackets, sanitizeGeneratedText } = require('../../src/lib/text');
 
 describe('cleanNoteText', () => {
   describe('URL 除去', () => {
@@ -42,6 +42,43 @@ describe('cleanNoteText', () => {
 
     test('$[spin テキスト] のテキストを保持する', () => {
       expect(cleanNoteText('$[spin 回転します]')).toBe('回転します');
+    });
+
+    test('<plain> タグを除去する', () => {
+      expect(cleanNoteText('<plain>もちもちマンゴー</plain>')).toBe('もちもちマンゴー');
+    });
+
+    test('<center> タグを除去する', () => {
+      expect(cleanNoteText('<center>テスト</center>')).toBe('テスト');
+    });
+
+    test('MFM アングルタグと $[...] が混在する場合', () => {
+      const result = cleanNoteText('<plain>$[tada 🎉]</plain>');
+      expect(result).toBe('🎉');
+    });
+  });
+
+  describe('罫線・装飾文字除去', () => {
+    test('罫線文字（U+2500-257F）を除去する', () => {
+      expect(cleanNoteText('┏━━┓ にて')).toBe('にて');
+    });
+
+    test('ブロック要素（U+2580-259F）を除去する', () => {
+      expect(cleanNoteText('▓▒░ 装飾')).toBe('装飾');
+    });
+
+    test('罫線と通常テキストが混在する場合', () => {
+      expect(cleanNoteText('┏━━┓ タイトル ┗━━┛')).toBe('タイトル');
+    });
+  });
+
+  describe('引用マーカー除去', () => {
+    test('行頭の > を除去する', () => {
+      expect(cleanNoteText('> 引用テキスト')).toBe('引用テキスト');
+    });
+
+    test('テキスト内のスペース後の > を除去する', () => {
+      expect(cleanNoteText('🙏️ > 希死念慮 でけた')).toBe('🙏️ 希死念慮 でけた');
     });
   });
 
@@ -188,5 +225,189 @@ describe('splitIntoSentences', () => {
   test('前後の空白を trim する', () => {
     const result = splitIntoSentences(' 一文目 。 二文目 。');
     expect(result).toEqual(['一文目', '二文目']);
+  });
+});
+
+// =====================================================================
+// stripDecorations
+// =====================================================================
+
+describe('stripDecorations', () => {
+  test('<plain> タグを除去し中身を保持する', () => {
+    expect(stripDecorations('<plain>もちもちマンゴー</plain>')).toBe('もちもちマンゴー');
+  });
+
+  test('<center> タグを除去する', () => {
+    expect(stripDecorations('<center>テキスト</center>')).toBe('テキスト');
+  });
+
+  test('属性付きタグを除去する', () => {
+    expect(stripDecorations('<small>小さい</small>')).toBe('小さい');
+  });
+
+  test('顔文字 <(^o^)> は除去しない', () => {
+    // 先頭が英字でないため除去対象外
+    expect(stripDecorations('<(^o^)>')).toBe('<(^o^)>');
+  });
+
+  test('罫線文字（U+2500-257F）を除去する', () => {
+    // 罫線は除去されるがスペースは残る（空白正規化はパイプライン末尾で行う）
+    expect(stripDecorations('┏━━┓ タイトル ┗━━┛')).toBe(' タイトル ');
+  });
+
+  test('ブロック要素（U+2580-259F）を除去する', () => {
+    expect(stripDecorations('▓▒░ デコ ▓')).toBe(' デコ ');
+  });
+
+  test('行頭の引用マーカー > を除去する', () => {
+    expect(stripDecorations('> 引用テキスト')).toBe('引用テキスト');
+  });
+
+  test('文中スペース後の > を除去する', () => {
+    expect(stripDecorations('🙏️ > 希死念慮 でけた')).toBe('🙏️ 希死念慮 でけた');
+  });
+
+  test('空文字列は空文字列を返す', () => {
+    expect(stripDecorations('')).toBe('');
+  });
+});
+
+// =====================================================================
+// balanceBrackets
+// =====================================================================
+
+describe('balanceBrackets', () => {
+  test('対応のない閉じ括弧を削除する（半角）', () => {
+    expect(balanceBrackets('わたっしーとしてます )のまま')).toBe('わたっしーとしてます のまま');
+  });
+
+  test('対応のない閉じ括弧を削除する（全角）', () => {
+    expect(balanceBrackets('テスト）です')).toBe('テストです');
+  });
+
+  test('未閉じの開き括弧を末尾で閉じる', () => {
+    expect(balanceBrackets('（あいうえお')).toBe('（あいうえお）');
+  });
+
+  test('正しく対応している括弧はそのまま保持する', () => {
+    expect(balanceBrackets('（テスト）です')).toBe('（テスト）です');
+  });
+
+  test('「」 の対応はそのまま保持する', () => {
+    expect(balanceBrackets('「こんにちは」と言った')).toBe('「こんにちは」と言った');
+  });
+
+  test('対応のない 」 を削除する', () => {
+    expect(balanceBrackets('こんにちは」と言った')).toBe('こんにちはと言った');
+  });
+
+  test('複数の対応括弧を処理する', () => {
+    expect(balanceBrackets('（あ）（い）')).toBe('（あ）（い）');
+  });
+
+  test('ネストした括弧を処理する', () => {
+    expect(balanceBrackets('（ああ（いい）うう）')).toBe('（ああ（いい）うう）');
+  });
+
+  test('空文字列は空文字列を返す', () => {
+    expect(balanceBrackets('')).toBe('');
+  });
+});
+
+// =====================================================================
+// sanitizeGeneratedText
+// =====================================================================
+
+describe('sanitizeGeneratedText', () => {
+  describe('MFM タグ除去', () => {
+    test('<plain> タグを除去する', () => {
+      expect(sanitizeGeneratedText('<plain>もちもちマンゴー<center>雨だから')).toBe('もちもちマンゴー雨だから');
+    });
+  });
+
+  describe('罫線・装飾除去', () => {
+    test('罫線文字を除去する', () => {
+      expect(sanitizeGeneratedText('┏━━┓ にて🙌️')).toBe('にて🙌️');
+    });
+  });
+
+  describe('ハッシュタグ除去', () => {
+    test('Google スプレッドシートのエラーリテラルを除去する', () => {
+      expect(sanitizeGeneratedText('雨だからのとか#ERROR!#ERROR! あと')).toBe('雨だからのとか あと');
+    });
+
+    test('#REF! を除去する', () => {
+      expect(sanitizeGeneratedText('テスト#REF!です')).toBe('テストです');
+    });
+
+    test('通常のハッシュタグ（語ごと）を除去する', () => {
+      expect(sanitizeGeneratedText('#JavaScript と #日本語タグ')).toBe('と');
+    });
+
+    test('ハッシュタグがないテキストはそのまま', () => {
+      expect(sanitizeGeneratedText('普通のテキストです')).toBe('普通のテキストです');
+    });
+  });
+
+  describe('括弧の釣り合わせ', () => {
+    test('対応のない閉じ括弧を削除する', () => {
+      expect(sanitizeGeneratedText('わたっしーとしてます )のままと千カラット')).toBe('わたっしーとしてます のままと千カラット');
+    });
+
+    test('未閉じの開き括弧を補完する', () => {
+      expect(sanitizeGeneratedText('（あいうえお')).toBe('（あいうえお）');
+    });
+  });
+
+  describe('カスタム絵文字スペース挿入', () => {
+    test('絵文字直後の半角英数の前にスペースを挿入する', () => {
+      expect(sanitizeGeneratedText(':minna_watashi_no_hazukashii_toukou_surutoko_mitete:meme作り中')).toBe(':minna_watashi_no_hazukashii_toukou_surutoko_mitete: meme作り中');
+    });
+
+    test('絵文字直後が日本語の場合はスペースを挿入しない', () => {
+      expect(sanitizeGeneratedText(':blobzzz_itsumoarigato:何故か')).toBe(':blobzzz_itsumoarigato:何故か');
+    });
+
+    test('絵文字直後がスペースの場合は変化なし', () => {
+      expect(sanitizeGeneratedText(':emoji: テスト')).toBe(':emoji: テスト');
+    });
+
+    test(':emoji@host: 形式でも半角英数前にスペースを挿入する', () => {
+      expect(sanitizeGeneratedText(':ayaka@misskey.io:test')).toBe(':ayaka@misskey.io: test');
+    });
+  });
+
+  describe('引用マーカー除去', () => {
+    test('スペース後の > を除去する', () => {
+      expect(sanitizeGeneratedText('🙏️ > 希死念慮 でけた')).toBe('🙏️ 希死念慮 でけた');
+    });
+  });
+
+  describe('実投稿ケース', () => {
+    test('投稿例1: 複合不具合', () => {
+      const input = 'わたっしーとしてます )のままと千カラット <plain>もちもちマンゴー<center>雨だからのとか#ERROR!#ERROR! ┏━━┓ にて🙌️';
+      const result = sanitizeGeneratedText(input);
+      expect(result).not.toContain(')のまま');
+      expect(result).not.toContain('<plain>');
+      expect(result).not.toContain('<center>');
+      expect(result).not.toContain('#ERROR!');
+      expect(result).not.toContain('┏');
+      expect(result).toContain('もちもちマンゴー');
+      expect(result).toContain('にて🙌️');
+    });
+  });
+
+  describe('エッジケース', () => {
+    test('null は空文字列を返す', () => {
+      expect(sanitizeGeneratedText(null)).toBe('');
+    });
+
+    test('空文字列は空文字列を返す', () => {
+      expect(sanitizeGeneratedText('')).toBe('');
+    });
+
+    test('通常テキストはそのまま返す', () => {
+      expect(sanitizeGeneratedText('普通のテキストです。')).toBe('普通のテキストです。');
+    });
   });
 });
