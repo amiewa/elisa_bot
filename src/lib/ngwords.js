@@ -10,6 +10,18 @@ function containsNGWord(text, ngwords) {
 }
 
 /**
+ * 絵文字名が NG リストに完全一致するか（大文字小文字無視）。
+ * @param {string} name       コロン無しの絵文字名
+ * @param {string[]} ngEmojis 小文字化済みでも可（内部で再度小文字化）
+ * @returns {boolean}
+ */
+function isNgEmoji(name, ngEmojis) {
+  if (!name || !ngEmojis || ngEmojis.length === 0) return false;
+  const lower = String(name).trim().toLowerCase();
+  return ngEmojis.some((ng) => String(ng).toLowerCase() === lower);
+}
+
+/**
  * 文字 bigram 集合のジャッカード類似度
  * @param {string} a
  * @param {string} b
@@ -38,5 +50,5 @@ function jaccardSimilarity(a, b) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { containsNGWord, jaccardSimilarity };
+  module.exports = { containsNGWord, isNgEmoji, jaccardSimilarity };
 }

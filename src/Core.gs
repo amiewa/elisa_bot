@@ -8,6 +8,7 @@ var SHEET = {
   BLACKLIST:         '学習除外ブラックリスト',
   NG_WORDS:          'NGワード',
   EMOJIS:            'カスタム絵文字',
+  NG_EMOJIS:         'NGカスタム絵文字',
   NGRAM:             'N-gram本体',
   RAW_LEARN:         '生学習データ',
   PROCESSED_MISSKEY: '処理済みID_Misskey',
@@ -115,6 +116,26 @@ function loadNGWords() {
 
   // 重複除去
   return Array.from(new Set(words));
+}
+
+// ===================================================================
+// NGカスタム絵文字
+// ===================================================================
+
+/**
+ * NGカスタム絵文字シートから絵文字名リストを読み込む（小文字化・重複除去）。
+ * @returns {string[]}
+ */
+function loadNgEmojis_() {
+  var sheet = getSheet_(SHEET.NG_EMOJIS);
+  if (!sheet) return [];
+  var vals = sheet.getDataRange().getValues();
+  var names = [];
+  for (var i = 1; i < vals.length; i++) {
+    var w = String(vals[i][0]).trim().toLowerCase();
+    if (w) names.push(w);
+  }
+  return Array.from(new Set(names));
 }
 
 // ===================================================================

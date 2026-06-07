@@ -375,6 +375,14 @@ function refreshCustomEmojis() {
 
   if (!emojis || emojis.length === 0) return;
 
+  // NGカスタム絵文字をシート登録前に除外
+  var ngEmojis = loadNgEmojis_();
+  if (ngEmojis.length > 0) {
+    emojis = emojis.filter(function (e) {
+      return !isNgEmoji(e && e.name, ngEmojis);
+    });
+  }
+
   // EMOJI_MAX_COUNT を超える場合はランダムサンプリング
   var maxCount = parseInt(getConfig('EMOJI_MAX_COUNT', '500'), 10);
   if (emojis.length > maxCount) {

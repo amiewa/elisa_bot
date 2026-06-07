@@ -22,7 +22,9 @@
     "logError": "readonly",
     "incrementCounter": "readonly",
     "loadNGWords": "readonly",
+    "loadNgEmojis_": "readonly",
     "containsNGWord": "readonly",
+    "isNgEmoji": "readonly",
     "jaccardSimilarity": "readonly",
     "isTimeSafe": "readonly",
     "isNightTime": "readonly",
@@ -82,7 +84,7 @@
   },
   "rules": {
     "no-unused-vars": ["warn", {
-      "varsIgnorePattern": "^(doPost|onOpen|onHourlyTrigger|mainDispatcher|processLearn|processMarkovPost|processMastodonPolling|setupSpreadsheet|validateConfig|manageApiTokens|cleanupAfterPlatformSwitch|factoryReset|testShowConfig|showLastWebhookEvent|runFollowSync|executeAutoDelete|runDailyMaintenance|rotateProcessedIds|rotatePostHistory|rotateRawLearnData|rotateErrorLog|refreshCustomEmojis|cleanupProperties_|cleanNgramInvisibleTokens_|SHEET|SS|SCRIPT_START|getConfig|logError|incrementCounter|loadNGWords|containsNGWord|isTimeSafe|isNightTime|createAdapter|callMisskeyApi|callMastodonApi|makeApiError_|createMisskeyAdapter_|createMastodonAdapter_|learn|generate|NGramStore|getSheet_|getProp_|setProp_|deleteProp_|clearConfigCache_|cleanupOldCounters_|now_|loadNgramStore_|flushNgramStore_|generatePost_|learnFromNotes_|tokenizeNote_|callYahooMA_|writeDashboard_|parseBool)"
+      "varsIgnorePattern": "^(doPost|onOpen|onHourlyTrigger|mainDispatcher|processLearn|processMarkovPost|processMastodonPolling|setupSpreadsheet|validateConfig|manageApiTokens|cleanupAfterPlatformSwitch|factoryReset|testShowConfig|showLastWebhookEvent|runFollowSync|executeAutoDelete|runDailyMaintenance|rotateProcessedIds|rotatePostHistory|rotateRawLearnData|rotateErrorLog|refreshCustomEmojis|cleanupProperties_|cleanNgramInvisibleTokens_|SHEET|SS|SCRIPT_START|getConfig|logError|incrementCounter|loadNGWords|loadNgEmojis_|containsNGWord|isTimeSafe|isNightTime|createAdapter|callMisskeyApi|callMastodonApi|makeApiError_|createMisskeyAdapter_|createMastodonAdapter_|learn|generate|NGramStore|getSheet_|getProp_|setProp_|deleteProp_|clearConfigCache_|cleanupOldCounters_|now_|loadNgramStore_|flushNgramStore_|generatePost_|learnFromNotes_|tokenizeNote_|callYahooMA_|writeDashboard_|parseBool)"
     }],
     "no-undef": "error",
     "no-redeclare": ["error", { "builtinGlobals": false }],

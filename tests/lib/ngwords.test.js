@@ -1,5 +1,5 @@
 'use strict';
-const { containsNGWord, jaccardSimilarity } = require('../../src/lib/ngwords');
+const { containsNGWord, isNgEmoji, jaccardSimilarity } = require('../../src/lib/ngwords');
 
 describe('containsNGWord', () => {
   test('一致あり(完全一致)', () => expect(containsNGWord('bad word here', ['bad'])).toBe(true));
@@ -9,6 +9,17 @@ describe('containsNGWord', () => {
   test('空テキスト → false', () => expect(containsNGWord('', ['bad'])).toBe(false));
   test('空リスト → false', () => expect(containsNGWord('bad', [])).toBe(false));
   test('null テキスト → false', () => expect(containsNGWord(null, ['bad'])).toBe(false));
+});
+
+describe('isNgEmoji', () => {
+  test('完全一致 → true', () => expect(isNgEmoji('cat', ['cat', 'dog'])).toBe(true));
+  test('部分一致でも false（cat で cat_run を除外しない）', () => expect(isNgEmoji('cat_run', ['cat'])).toBe(false));
+  test('大文字小文字無視', () => expect(isNgEmoji('Cat', ['cat'])).toBe(true));
+  test('NG リストが大文字でも一致', () => expect(isNgEmoji('cat', ['CAT'])).toBe(true));
+  test('一致なし → false', () => expect(isNgEmoji('dog', ['cat', 'bird'])).toBe(false));
+  test('空 name → false', () => expect(isNgEmoji('', ['cat'])).toBe(false));
+  test('null name → false', () => expect(isNgEmoji(null, ['cat'])).toBe(false));
+  test('空リスト → false', () => expect(isNgEmoji('cat', [])).toBe(false));
 });
 
 describe('jaccardSimilarity', () => {

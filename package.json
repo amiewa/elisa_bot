@@ -1,6 +1,6 @@
 {
   "name": "elisa_bot",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "elisa_bot — Misskey/Mastodon 両対応マルコフ連鎖 bot (GAS)",
   "scripts": {
     "lint": "eslint --ext .gs src/",

@@ -27,7 +27,7 @@ function onOpen() {
 }
 
 // ===================================================================
-// setupSpreadsheet — 12シートを冪等に作成・装飾
+// setupSpreadsheet — 13シートを冪等に作成・装飾
 // ===================================================================
 
 function setupSpreadsheet() {
@@ -70,6 +70,7 @@ function getSheetDefinitions_() {
       name: SHEET.EMOJIS,
       headers: ['name', 'category', 'aliases', 'url', 'last_updated']
     },
+    { name: SHEET.NG_EMOJIS, headers: ['name'] },
     {
       name: SHEET.NGRAM,
       headers: ['prev_token', 'next_token', 'count', 'last_used_at']

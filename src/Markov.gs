@@ -299,6 +299,7 @@ function generatePost_(ngramStore) {
 
 /**
  * 自鯖カスタム絵文字シートから絵文字名（:name: 形式）のリストを返す。
+ * NGカスタム絵文字シートに登録された名前は除外する。
  */
 function _loadEmojiNames_() {
   var sheet = getSheet_(SHEET.EMOJIS);
@@ -306,10 +307,11 @@ function _loadEmojiNames_() {
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return [];
   var rows = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  var ngEmojis = loadNgEmojis_();
   var names = [];
   for (var i = 0; i < rows.length; i++) {
     var name = String(rows[i][0]).trim();
-    if (name) names.push(':' + name + ':');
+    if (name && !isNgEmoji(name, ngEmojis)) names.push(':' + name + ':');
   }
   return names;
 }
