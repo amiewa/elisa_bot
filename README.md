@@ -114,8 +114,8 @@ GAS エディタ(拡張機能 > Apps Script)で以下のトリガーを追加す
 | `MARKOV_MIN_LENGTH` | `8` | 1文の最短文字数 |
 | `MARKOV_MAX_LENGTH` | `140` | 投稿全体の最大文字数 |
 | `MARKOV_MAX_RETRY` | `5` | 生成リトライ上限 |
-| `MARKOV_EMOJI_RATE` | `20` | カスタム絵文字を注入する確率（% / 境界ごとの独立判定） |
-| `MARKOV_EMOJI_POSITION` | `mixed` | 絵文字の挿入位置: `mixed`（文頭・文節末・文末）/ `end`（文末のみ） |
+| `MARKOV_EMOJI_RATE` | `8` | カスタム絵文字を注入する確率（% / 文頭・文間・文末ごとの独立判定）。投稿あたり出現率 ≈ `1-(1-rate)^(文数+1)` |
+| `MARKOV_EMOJI_POSITION` | `mixed` | 絵文字の挿入位置: `mixed`（文頭・文間・文末）/ `end`（文末のみ） |
 | `MARKOV_EMOJI_MAX_PER_POST` | `3` | `mixed` モード時の1投稿あたり絵文字数の上限 |
 
 ### N-gram
@@ -136,6 +136,7 @@ GAS エディタ(拡張機能 > Apps Script)で以下のトリガーを追加す
 | `LEARN_FROM_MENTIONS` | `FALSE` | メンションを学習対象にするか |
 | `LEARN_EXCLUDE_BOTS` | `TRUE` | bot 投稿を学習から除外するか |
 | `LEARN_RAW_RETENTION_DAYS` | `7` | 生学習データの保持日数（0 = 保持しない） |
+| `LEARN_FALLBACK_NEW_PAIRS` | `FALSE` | Yahoo 形態素解析が不通の間も簡易解析（文字種境界）で新規 N-gram ペアを学習するか（`TRUE` にするとコーパスが成長し続けるが粗いトークンが混入する） |
 
 **常時除外（設定不要）**: 以下はコーパス品質・プライバシー保護のため常に学習から除外される（設定不要）。
 

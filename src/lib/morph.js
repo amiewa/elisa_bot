@@ -49,12 +49,15 @@ function _charType(ch) {
 
 /**
  * F4 粗トークナイズ: 文字種（ひらがな/カタカナ/漢字/英数字/その他）の遷移境界で分割。
- * F1 フラグ付き（isNewPairAllowed: false）で返す。
  * @param {string} text
+ * @param {boolean} [allowNewPairs=false]
+ *   true のとき isNewPairAllowed: true を返す（Yahoo MA不通時でも新規ペアを学習したい場合）。
+ *   省略または false のとき isNewPairAllowed: false（F1 制御・既存挙動）。
  * @returns {{ tokens: string[], isNewPairAllowed: boolean }}
  */
-function fallbackTokenize(text) {
-  if (!text) return { tokens: [], isNewPairAllowed: false };
+function fallbackTokenize(text, allowNewPairs) {
+  var allow = allowNewPairs === true;
+  if (!text) return { tokens: [], isNewPairAllowed: allow };
   var tokens = [];
   var current = '';
   var currentType = null;
@@ -77,7 +80,7 @@ function fallbackTokenize(text) {
     return _charType(t[0]) !== 'other';
   });
 
-  return { tokens: tokens, isNewPairAllowed: false };
+  return { tokens: tokens, isNewPairAllowed: allow };
 }
 
 if (typeof module !== 'undefined' && module.exports) {

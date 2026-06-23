@@ -101,13 +101,16 @@ function tokenizeNote_(text) {
     getProp_('COUNT_URL_FETCH_system_' + date, '0'), 10
   );
 
-  if (fetchCount >= threshold) return fallbackTokenize(text);
+  // Yahoo MA 不通時に新規ペアを学習するかを設定から読む（既定: FALSE）
+  var allowFallbackPairs = parseBool(getConfig('LEARN_FALLBACK_NEW_PAIRS', 'FALSE'), false);
+
+  if (fetchCount >= threshold) return fallbackTokenize(text, allowFallbackPairs);
 
   var clientId = getProp_('YAHOO_CLIENT_ID', '');
-  if (!clientId) return fallbackTokenize(text);
+  if (!clientId) return fallbackTokenize(text, allowFallbackPairs);
 
   var yahooTokens = callYahooMA_(text, clientId);
-  if (yahooTokens === null) return fallbackTokenize(text);
+  if (yahooTokens === null) return fallbackTokenize(text, allowFallbackPairs);
 
   return { tokens: yahooTokens, isNewPairAllowed: true };
 }

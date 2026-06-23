@@ -112,12 +112,33 @@ describe('fallbackTokenize', () => {
     expect(result.isNewPairAllowed).toBe(false);
   });
 
-  test('isNewPairAllowed が常に false', () => {
+  test('allowNewPairs 省略時は isNewPairAllowed が false（既定・F1制御維持）', () => {
     const result = fallbackTokenize('テスト');
     expect(result.isNewPairAllowed).toBe(false);
   });
 
-  test('isNewPairAllowed が空入力でも false', () => {
+  test('allowNewPairs=false のとき isNewPairAllowed が false', () => {
+    const result = fallbackTokenize('テスト', false);
+    expect(result.isNewPairAllowed).toBe(false);
+  });
+
+  test('allowNewPairs=true のとき isNewPairAllowed が true', () => {
+    const result = fallbackTokenize('テスト', true);
+    expect(result.isNewPairAllowed).toBe(true);
+  });
+
+  test('allowNewPairs=true でも tokens の分割結果は不変', () => {
+    const { tokens: t1 } = fallbackTokenize('今日はいい天気', false);
+    const { tokens: t2 } = fallbackTokenize('今日はいい天気', true);
+    expect(t2).toEqual(t1);
+  });
+
+  test('allowNewPairs=true で空入力でも isNewPairAllowed が true', () => {
+    const result = fallbackTokenize('', true);
+    expect(result.isNewPairAllowed).toBe(true);
+  });
+
+  test('isNewPairAllowed が空入力（省略）でも false', () => {
     const result = fallbackTokenize('');
     expect(result.isNewPairAllowed).toBe(false);
   });

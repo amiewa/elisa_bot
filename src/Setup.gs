@@ -194,8 +194,8 @@ var CONFIG_DEFAULTS_ = [
   ['MARKOV_MIN_LENGTH', '8', '1文あたりの最短文字数'],
   ['MARKOV_MAX_LENGTH', '140', '投稿全体の最大文字数'],
   ['MARKOV_MAX_RETRY', '5', '生成リトライ上限'],
-  ['MARKOV_EMOJI_RATE', '20', '絵文字を注入する確率（% / 境界ごとの独立判定）'],
-  ['MARKOV_EMOJI_POSITION', 'mixed', '絵文字挿入位置: mixed(文頭/文節末/文末) / end(文末のみ)'],
+  ['MARKOV_EMOJI_RATE', '8', '絵文字注入確率（% / 文頭・文間・文末ごとの独立判定）。投稿あたり出現率≈1-(1-rate)^(文数+1)'],
+  ['MARKOV_EMOJI_POSITION', 'mixed', '絵文字挿入位置: mixed(文頭/文末/文間) / end(文末のみ)'],
   ['MARKOV_EMOJI_MAX_PER_POST', '3', 'mixed時の1投稿あたり絵文字数の上限'],
   ['NGRAM_ORDER', '2', 'N-gram 次数(現状2固定)'],
   ['NGRAM_MAX_ROWS', '50000', 'N-gram シートの最大行数'],
@@ -206,6 +206,7 @@ var CONFIG_DEFAULTS_ = [
   ['LEARN_FROM_MENTIONS', 'FALSE', 'メンションを学習対象にするか'],
   ['LEARN_EXCLUDE_BOTS', 'TRUE', 'bot投稿を学習対象から除外'],
   ['LEARN_RAW_RETENTION_DAYS', '7', '生学習データ保持日数(0=保持しない)'],
+  ['LEARN_FALLBACK_NEW_PAIRS', 'FALSE', 'Yahoo MA不通時の簡易解析でも新規N-gramペアを学習するか'],
   [
     'MORPH_URLFETCH_FALLBACK_THRESHOLD',
     '15000',
