@@ -210,7 +210,7 @@ function learn(sentencesOfTokens, ngramStore, isNewPairAllowed) {
  * マルコフ連鎖で投稿テキストを生成する。
  * 長さ制御 A1/B1/C1/D2/E2 を適用。
  * @param {NGramStore} ngramStore
- * @param {{sentences_min: number, sentences_max: number, min_length: number, max_length: number, emoji_rate: number}} config
+ * @param {{sentences_min: number, sentences_max: number, min_length: number, max_length: number, emoji_rate: number, emoji_position?: string, emoji_max_per_post?: number}} config
  * @param {string[]} emojis
  * @param {Function} [rng=Math.random]
  * @returns {string|null}
@@ -222,34 +222,46 @@ function generate(ngramStore, config, emojis, rng) {
   var min_length = config.min_length || 1;
   var max_length = config.max_length || 140;
   var emoji_rate = config.emoji_rate !== undefined ? config.emoji_rate : 20;
+  var emoji_position = config.emoji_position || 'mixed';
+  var emoji_max_per_post = config.emoji_max_per_post !== undefined ? config.emoji_max_per_post : 3;
 
   var targetCount = Math.floor(rng() * (sentences_max - sentences_min + 1)) + sentences_min;
-  var sentences = [];
+  var sentencesTokens = [];
   var totalLen = 0;
 
   for (var s = 0; s < targetCount; s++) {
-    var sentence = _generateOneSentence(ngramStore, min_length, max_length - totalLen, rng);
-    if (sentence === null) continue; // C1/D2: 生成失敗は skip
+    var tokens = _generateOneSentence(ngramStore, min_length, max_length - totalLen, rng);
+    if (tokens === null) continue; // C1/D2: 生成失敗は skip
+    var text = tokens.join('');
     // A1: 最短文字数チェック
-    if (sentence.length < min_length) continue;
+    if (text.length < min_length) continue;
     // B1: 投稿全体の最大長チェック
-    if (totalLen + sentence.length > max_length) break;
-    sentences.push(sentence);
-    totalLen += sentence.length;
+    if (totalLen + text.length > max_length) break;
+    sentencesTokens.push(tokens);
+    totalLen += text.length;
   }
 
-  if (sentences.length === 0) return null;
-  return injectEmojis(sentences, emojis, emoji_rate, rng);
+  if (sentencesTokens.length === 0) return null;
+
+  if (emoji_position === 'end') {
+    // end モード: 従来の文末のみ注入
+    return injectEmojis(
+      sentencesTokens.map(function (t) { return t.join(''); }),
+      emojis, emoji_rate, rng
+    );
+  }
+  // mixed モード（既定）: 文頭/文節末/文末に注入
+  return injectEmojisMixed(sentencesTokens, emojis, emoji_rate, rng, emoji_max_per_post);
 }
 
 /**
- * 1文を生成する内部関数。
+ * 1文を生成する内部関数。トークン配列を返す。
  * C1: 行き詰まり時は null。D2: 同一トークン3連続で null。
  * @param {NGramStore} ngramStore
  * @param {number} minLen
  * @param {number} maxLen
  * @param {Function} rng
- * @returns {string|null}
+ * @returns {string[]|null}  トークン配列（join すると文字列になる）
  */
 function _generateOneSentence(ngramStore, minLen, maxLen, rng) {
   var MAX_TOKENS = 200;
@@ -283,15 +295,14 @@ function _generateOneSentence(ngramStore, minLen, maxLen, rng) {
   }
 
   if (tokens.length === 0) return null;
-  var text = tokens.join('');
-  if (text.length > maxLen) return null;
-  return text;
+  if (tokens.join('').length > maxLen) return null;
+  return tokens;
 }
 
 /**
- * γ方式絵文字注入: 各文末に独立判定で絵文字を注入し結合した文字列を返す。
+ * γ方式絵文字注入（end モード）: 各文末に独立判定で絵文字を注入し結合した文字列を返す。
  * 文間: 当選=絵文字（区切りなし）、非当選=句点。最終文末: 当選=絵文字、非当選=なし。
- * @param {string[]} sentences
+ * @param {string[]} sentences  文字列配列（トークン結合済み）
  * @param {string[]} emojis
  * @param {number} rate  0〜100（%）
  * @param {Function} [rng=Math.random]
@@ -316,6 +327,82 @@ function injectEmojis(sentences, emojis, rate, rng) {
   return result;
 }
 
+/**
+ * mixed 方式絵文字注入: 文頭・形態素トークン境界（文節末の近似）・文間・文末に
+ * 確率注入する。直前絵文字直後へは再注入しない（隣接連続回避）。
+ * 1投稿あたりの絵文字数を cap で上限管理。
+ * rate=0 かつ emojis=[] のとき end モードと同一の出力になる。
+ * @param {string[][]} sentencesTokens  トークン配列の配列（文×トークン）
+ * @param {string[]} emojis
+ * @param {number} rate  0〜100（%）
+ * @param {Function} [rng=Math.random]
+ * @param {number} [cap=3]  1投稿あたりの絵文字挿入数上限
+ * @returns {string}
+ */
+function injectEmojisMixed(sentencesTokens, emojis, rate, rng, cap) {
+  if (!rng) rng = Math.random;
+  if (!sentencesTokens || sentencesTokens.length === 0) return '';
+  var hasEmojis = emojis && emojis.length > 0;
+  if (cap === undefined) cap = 3;
+
+  var emojiCount = 0;
+  var result = '';
+  var prevWasEmoji = false;
+
+  // 絵文字を1つランダムに選んで返す内部ヘルパ
+  function pickOne() {
+    return emojis[Math.floor(rng() * emojis.length)];
+  }
+  // Bernoulli 判定。当選 → 絵文字文字列、非当選 → ''
+  // emojiCount・prevWasEmoji を副作用で更新する
+  function tryInject() {
+    if (!hasEmojis || emojiCount >= cap || prevWasEmoji) return '';
+    if (rng() * 100 < rate) {
+      emojiCount++;
+      prevWasEmoji = true;
+      return pickOne();
+    }
+    return '';
+  }
+
+  for (var si = 0; si < sentencesTokens.length; si++) {
+    var tokens = sentencesTokens[si];
+    var isLast = si === sentencesTokens.length - 1;
+
+    // 文頭（投稿の先頭のみ）
+    if (si === 0) {
+      result += tryInject();
+    }
+
+    // 各トークンを順に出力し、トークン間に絵文字を試みる
+    for (var ti = 0; ti < tokens.length; ti++) {
+      result += tokens[ti];
+      prevWasEmoji = false; // テキストを出力したのでリセット
+
+      // トークン間（文節末の近似）: 最後のトークンの後は文末/文間で処理
+      if (ti < tokens.length - 1) {
+        result += tryInject();
+      }
+    }
+
+    if (!isLast) {
+      // 文間: 当選=絵文字（句点なし）、非当選=句点
+      var inter = tryInject();
+      if (inter) {
+        result += inter;
+      } else {
+        result += '。';
+        prevWasEmoji = false;
+      }
+    } else {
+      // 最終文末
+      result += tryInject();
+    }
+  }
+
+  return result;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     NGramStore,
@@ -326,6 +413,7 @@ if (typeof module !== 'undefined' && module.exports) {
     pickNextToken,
     learn,
     generate,
-    injectEmojis
+    injectEmojis,
+    injectEmojisMixed
   };
 }

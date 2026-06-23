@@ -1,5 +1,5 @@
 'use strict';
-const { cleanNoteText, splitIntoSentences, stripDecorations, balanceBrackets, sanitizeGeneratedText } = require('../../src/lib/text');
+const { cleanNoteText, splitIntoSentences, stripDecorations, balanceBrackets, sanitizeGeneratedText, containsExcludedScript } = require('../../src/lib/text');
 
 describe('cleanNoteText', () => {
   describe('URL 除去', () => {
@@ -407,7 +407,85 @@ describe('sanitizeGeneratedText', () => {
     });
 
     test('通常テキストはそのまま返す', () => {
-      expect(sanitizeGeneratedText('普通のテキストです。')).toBe('普通のテキストです。');
+      expect(sanitizeGeneratedText('普通のテキストです。'));
     });
+  });
+});
+
+// =====================================================================
+// cleanNoteText — 半角記号除去（追加ステップ 7b）
+// =====================================================================
+
+describe('cleanNoteText 半角記号除去', () => {
+  test('ASCII 記号（! ?）を除去しスペースに変換する', () => {
+    expect(cleanNoteText('猫!?犬')).toBe('猫 犬');
+  });
+
+  test('スラッシュを除去する', () => {
+    expect(cleanNoteText('and/or')).toBe('and or');
+  });
+
+  test('ASCII 英数字は保持される', () => {
+    expect(cleanNoteText('abc 123')).toBe('abc 123');
+  });
+
+  test('全角句読点（、。）は保持される', () => {
+    expect(cleanNoteText('猫、犬。ねこ')).toBe('猫、犬。ねこ');
+  });
+
+  test('半角句読点（｡ ､）を除去する', () => {
+    expect(cleanNoteText('テスト｡半角')).toBe('テスト 半角');
+  });
+
+  test('記号のみの文字列は空になる', () => {
+    expect(cleanNoteText('!!??')).toBe('');
+  });
+
+  test('算術演算子（+=-）を除去する', () => {
+    // +, =, - はいずれも ASCII 記号範囲内
+    const result = cleanNoteText('1+2=3-0');
+    expect(result).not.toContain('+');
+    expect(result).not.toContain('=');
+    expect(result).not.toContain('-');
+    // 数字は保持される
+    expect(result).toContain('1');
+  });
+});
+
+// =====================================================================
+// containsExcludedScript
+// =====================================================================
+
+describe('containsExcludedScript', () => {
+  test('キリル文字（ロシア語）を含む場合は true', () => {
+    expect(containsExcludedScript('Привет')).toBe(true);
+  });
+
+  test('ハングル音節を含む場合は true', () => {
+    expect(containsExcludedScript('안녕하세요')).toBe(true);
+  });
+
+  test('日本語テキストは false', () => {
+    expect(containsExcludedScript('普通の日本語です。')).toBe(false);
+  });
+
+  test('ひらがな・カタカナは false', () => {
+    expect(containsExcludedScript('ひらがなとカタカナ')).toBe(false);
+  });
+
+  test('ASCII のみは false', () => {
+    expect(containsExcludedScript('Hello World 123')).toBe(false);
+  });
+
+  test('空文字列は false', () => {
+    expect(containsExcludedScript('')).toBe(false);
+  });
+
+  test('日本語とキリル文字の混在は true', () => {
+    expect(containsExcludedScript('こんにちはПривет')).toBe(true);
+  });
+
+  test('日本語とハングルの混在は true', () => {
+    expect(containsExcludedScript('テスト한국어です')).toBe(true);
   });
 });

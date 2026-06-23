@@ -8,7 +8,8 @@ const {
   pickNextToken,
   learn,
   generate,
-  injectEmojis
+  injectEmojis,
+  injectEmojisMixed
 } = require('../../src/lib/markov');
 
 // =====================================================================
@@ -455,5 +456,120 @@ describe('isSheetsError', () => {
 
   test('ERROR! のみ（# なし）は false', () => {
     expect(isSheetsError('ERROR!')).toBe(false);
+  });
+});
+
+// =====================================================================
+// injectEmojisMixed
+// =====================================================================
+
+describe('injectEmojisMixed', () => {
+  test('rate=0 → 絵文字なし、文間は句点', () => {
+    const result = injectEmojisMixed([['一文目'], ['二文目'], ['三文目']], [], 0, Math.random, 3);
+    expect(result).toBe('一文目。二文目。三文目');
+  });
+
+  test('emojis 空配列 → 絵文字なし、文間は句点', () => {
+    const result = injectEmojisMixed([['一文目'], ['二文目']], [], 100, () => 0, 3);
+    expect(result).toBe('一文目。二文目');
+  });
+
+  test('sentences 空 → 空文字', () => {
+    expect(injectEmojisMixed([], [':a:'], 50, Math.random, 3)).toBe('');
+  });
+
+  test('rate=100, emojis あり, 1文 → 文頭と文末に絵文字が入る（cap=2）', () => {
+    // rng は常に 0 を返すので rate=100 で必ず当選
+    const result = injectEmojisMixed([['猫', 'です']], [':e:'], 100, () => 0, 3);
+    // 文頭: :e:, token[0]: 猫, token-boundary: :e:, token[1]: です, 文末: :e:
+    // cap=3 なので 3つ目まで入る
+    expect(result).toContain(':e:');
+    // 文頭に絵文字が入ること
+    expect(result.startsWith(':e:')).toBe(true);
+  });
+
+  test('cap に達したら以降は注入しない', () => {
+    const emojis = [':e:'];
+    const result = injectEmojisMixed(
+      [['あ', 'い', 'う', 'え', 'お']],
+      emojis, 100, () => 0, 2
+    );
+    // cap=2 なので :e: は最大2個
+    const count = (result.match(/:e:/g) || []).length;
+    expect(count).toBeLessThanOrEqual(2);
+  });
+
+  test('prevWasEmoji フラグにより隣接絵文字は回避される', () => {
+    // 文頭に絵文字が入った後、直前フラグが立っているのでトークン[0]の後は入らない
+    // rng = () => 0 → 必ず rate=100 で当選、prevWasEmoji=true 後は入らない
+    const result = injectEmojisMixed([['猫']], [':e:'], 100, () => 0, 10);
+    // 文頭 hit → :e:猫 → 文末: prevWasEmoji=false なので hit → 猫末 :e:
+    // 実際には: :e: + 猫 (prevWasEmoji=false after 猫) + :e: (文末)
+    expect(result).toBe(':e:猫:e:');
+  });
+
+  test('rate=100, 2文 → 文間は絵文字（句点なし）', () => {
+    const result = injectEmojisMixed([['一'], ['二']], [':e:'], 100, () => 0, 10);
+    // :e:一:e:二:e: (文頭, 文間, 文末)
+    expect(result).not.toContain('。');
+    expect(result).toContain(':e:');
+  });
+
+  test('トークンが複数あっても結合して正しい文字列になる', () => {
+    const result = injectEmojisMixed([['今日', 'は', '晴れ']], [], 0, Math.random, 3);
+    expect(result).toBe('今日は晴れ');
+  });
+});
+
+// =====================================================================
+// generate (mixed モード)
+// =====================================================================
+
+describe('generate (emoji_position=mixed)', () => {
+  function makeStore(pairs) {
+    const store = new NGramStore();
+    for (const [prev, next, count] of pairs) {
+      for (let i = 0; i < (count || 1); i++) store.add(prev, next);
+    }
+    return store;
+  }
+
+  test('emoji_position=mixed, rate=0 → end モードと同じ出力', () => {
+    const store = makeStore([
+      [BOS, '今日', 5], ['今日', 'は', 5], ['は', EOS, 5]
+    ]);
+    const config = {
+      sentences_min: 1, sentences_max: 1, min_length: 1, max_length: 140,
+      emoji_rate: 0, emoji_position: 'mixed', emoji_max_per_post: 3
+    };
+    const result = generate(store, config, [], () => 0);
+    expect(result).toBe('今日は');
+  });
+
+  test('emoji_position=end → 文末のみに絵文字', () => {
+    const store = makeStore([
+      [BOS, 'あ', 5], ['あ', EOS, 5]
+    ]);
+    const config = {
+      sentences_min: 1, sentences_max: 1, min_length: 1, max_length: 140,
+      emoji_rate: 100, emoji_position: 'end', emoji_max_per_post: 3
+    };
+    const result = generate(store, config, [':e:'], () => 0);
+    expect(result).toBe('あ:e:');
+  });
+
+  test('emoji_position=mixed, rate=100 → 絵文字が入り cap 以内', () => {
+    const store = makeStore([
+      [BOS, '猫', 5], ['猫', 'です', 5], ['です', EOS, 5]
+    ]);
+    const config = {
+      sentences_min: 1, sentences_max: 1, min_length: 1, max_length: 140,
+      emoji_rate: 100, emoji_position: 'mixed', emoji_max_per_post: 3
+    };
+    const result = generate(store, config, [':e:'], () => 0);
+    expect(result).toBeTruthy();
+    const count = (result.match(/:e:/g) || []).length;
+    expect(count).toBeLessThanOrEqual(3);
+    expect(count).toBeGreaterThan(0);
   });
 });

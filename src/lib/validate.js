@@ -106,6 +106,8 @@ function validateConfigValues(configMap) {
   }
   checkPositiveInt('MARKOV_MAX_RETRY');
   checkInt('MARKOV_EMOJI_RATE', 0, 100);
+  checkEnum('MARKOV_EMOJI_POSITION', ['mixed', 'end']);
+  checkInt('MARKOV_EMOJI_MAX_PER_POST', 1, 20);
 
   // === NGRAM ===
   checkPositiveInt('NGRAM_MAX_ROWS');

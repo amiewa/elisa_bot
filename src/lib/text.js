@@ -110,9 +110,26 @@ function cleanNoteText(text) {
   s = s.replace(/:[a-zA-Z0-9_]+(@[\w.-]+)?:/g, '');
   // 7. ハッシュタグ # のみ除去、語は保持（Unicode 文字クラス）
   s = s.replace(/#([\p{L}\p{N}_]+)/gu, '$1');
+  // 7b. 半角記号・半角句読点を除去（ASCII英数字・全角句読点は保持）
+  //     ASCII 記号ブロック U+0021-002F / 003A-0040 / 005B-0060 / 007B-007E
+  //     半角句読点 U+FF61-FF65（｡｢｣､･）
+  s = s.replace(/[!-/:-@[-`{-~｡-･]/g, ' ');
   // 8. 改行・連続空白 → 半角スペース1個
   s = s.replace(/[\r\n]+/g, ' ').replace(/[ \t]+/g, ' ').trim();
   return s;
+}
+
+// 学習除外スクリプト: キリル文字（U+0400-052F）・ハングル（U+1100-11FF / 3130-318F / AC00-D7AF）
+var _RE_EXCLUDED_SCRIPT = /[Ѐ-ԯᄀ-ᇿ㄰-㆏가-힯]/;
+
+/**
+ * 文字列にキリル文字またはハングルが含まれるか判定する。
+ * 学習時の文単位除外に使用する。
+ * @param {string} s
+ * @returns {boolean}
+ */
+function containsExcludedScript(s) {
+  return _RE_EXCLUDED_SCRIPT.test(s);
 }
 
 /**
@@ -129,5 +146,5 @@ function splitIntoSentences(text) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { cleanNoteText, splitIntoSentences, stripDecorations, balanceBrackets, sanitizeGeneratedText };
+  module.exports = { cleanNoteText, splitIntoSentences, stripDecorations, balanceBrackets, sanitizeGeneratedText, containsExcludedScript };
 }

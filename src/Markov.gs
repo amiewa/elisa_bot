@@ -188,6 +188,8 @@ function learnFromNotes_(notes, ngramStore) {
     if (!cleaned || cleaned.length < 2) continue;
 
     var sentences = splitIntoSentences(cleaned);
+    // キリル文字・ハングルを含む文はプライバシー・コーパス品質保護のため除外
+    sentences = sentences.filter(function (s) { return !containsExcludedScript(s); });
     if (sentences.length === 0) continue;
 
     // 文ごとにトークン化して学習
@@ -273,11 +275,13 @@ function _isBlacklisted_(note, blacklist) {
 function generatePost_(ngramStore) {
   var maxRetry = parseInt(getConfig('MARKOV_MAX_RETRY', '5'), 10);
   var config = {
-    sentences_min: parseInt(getConfig('POST_SENTENCES_MIN', '3'), 10),
-    sentences_max: parseInt(getConfig('POST_SENTENCES_MAX', '5'), 10),
-    min_length:    parseInt(getConfig('MARKOV_MIN_LENGTH',  '8'), 10),
-    max_length:    parseInt(getConfig('MARKOV_MAX_LENGTH',  '140'), 10),
-    emoji_rate:    parseInt(getConfig('MARKOV_EMOJI_RATE',  '20'), 10)
+    sentences_min:      parseInt(getConfig('POST_SENTENCES_MIN',       '3'),     10),
+    sentences_max:      parseInt(getConfig('POST_SENTENCES_MAX',       '5'),     10),
+    min_length:         parseInt(getConfig('MARKOV_MIN_LENGTH',        '8'),     10),
+    max_length:         parseInt(getConfig('MARKOV_MAX_LENGTH',        '140'),   10),
+    emoji_rate:         parseInt(getConfig('MARKOV_EMOJI_RATE',        '20'),    10),
+    emoji_position:             getConfig('MARKOV_EMOJI_POSITION',     'mixed'),
+    emoji_max_per_post: parseInt(getConfig('MARKOV_EMOJI_MAX_PER_POST', '3'),    10)
   };
 
   var emojis = _loadEmojiNames_();
