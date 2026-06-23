@@ -328,8 +328,8 @@ function injectEmojis(sentences, emojis, rate, rng) {
 }
 
 /**
- * mixed 方式絵文字注入: 文頭・形態素トークン境界（文節末の近似）・文間・文末に
- * 確率注入する。直前絵文字直後へは再注入しない（隣接連続回避）。
+ * mixed 方式絵文字注入: 文頭・文間・文末のみに確率注入する（トークン境界への注入は行わない）。
+ * 直前絵文字直後へは再注入しない（隣接連続回避）。
  * 1投稿あたりの絵文字数を cap で上限管理。
  * rate=0 かつ emojis=[] のとき end モードと同一の出力になる。
  * @param {string[][]} sentencesTokens  トークン配列の配列（文×トークン）
@@ -374,16 +374,9 @@ function injectEmojisMixed(sentencesTokens, emojis, rate, rng, cap) {
       result += tryInject();
     }
 
-    // 各トークンを順に出力し、トークン間に絵文字を試みる
-    for (var ti = 0; ti < tokens.length; ti++) {
-      result += tokens[ti];
-      prevWasEmoji = false; // テキストを出力したのでリセット
-
-      // トークン間（文節末の近似）: 最後のトークンの後は文末/文間で処理
-      if (ti < tokens.length - 1) {
-        result += tryInject();
-      }
-    }
+    // 全トークンをまとめて出力（トークン境界への注入は行わない）
+    result += tokens.join('');
+    prevWasEmoji = false; // テキストを出力したのでリセット
 
     if (!isLast) {
       // 文間: 当選=絵文字（句点なし）、非当選=句点

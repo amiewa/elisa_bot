@@ -478,14 +478,19 @@ describe('injectEmojisMixed', () => {
     expect(injectEmojisMixed([], [':a:'], 50, Math.random, 3)).toBe('');
   });
 
-  test('rate=100, emojis あり, 1文 → 文頭と文末に絵文字が入る（cap=2）', () => {
+  test('rate=100, emojis あり, 1文 → 文頭と文末に絵文字が入る', () => {
     // rng は常に 0 を返すので rate=100 で必ず当選
+    // 注入箇所は文頭・文末のみ（トークン境界には注入しない）
     const result = injectEmojisMixed([['猫', 'です']], [':e:'], 100, () => 0, 3);
-    // 文頭: :e:, token[0]: 猫, token-boundary: :e:, token[1]: です, 文末: :e:
-    // cap=3 なので 3つ目まで入る
-    expect(result).toContain(':e:');
-    // 文頭に絵文字が入ること
+    // 文頭: :e:, tokens: 猫です, 文末: :e: → :e:猫です:e:
+    expect(result).toBe(':e:猫です:e:');
     expect(result.startsWith(':e:')).toBe(true);
+  });
+
+  test('複数トークン文でトークン境界に絵文字が入らない（文頭・文末のみ）', () => {
+    const result = injectEmojisMixed([['あ', 'い', 'う']], [':e:'], 100, () => 0, 10);
+    // 文頭: :e:, tokens: あいう, 文末: :e:  → :e:あいう:e:
+    expect(result).toBe(':e:あいう:e:');
   });
 
   test('cap に達したら以降は注入しない', () => {
@@ -494,17 +499,14 @@ describe('injectEmojisMixed', () => {
       [['あ', 'い', 'う', 'え', 'お']],
       emojis, 100, () => 0, 2
     );
-    // cap=2 なので :e: は最大2個
+    // cap=2 なので :e: は最大2個（文頭+文末）
     const count = (result.match(/:e:/g) || []).length;
     expect(count).toBeLessThanOrEqual(2);
   });
 
-  test('prevWasEmoji フラグにより隣接絵文字は回避される', () => {
-    // 文頭に絵文字が入った後、直前フラグが立っているのでトークン[0]の後は入らない
-    // rng = () => 0 → 必ず rate=100 で当選、prevWasEmoji=true 後は入らない
+  test('prevWasEmoji フラグにより文頭絵文字後すぐ文末絵文字も正しく動作', () => {
+    // 1トークン文: 文頭 hit → :e:猫 → prevWasEmoji=false after 猫 → 文末 hit → :e:
     const result = injectEmojisMixed([['猫']], [':e:'], 100, () => 0, 10);
-    // 文頭 hit → :e:猫 → 文末: prevWasEmoji=false なので hit → 猫末 :e:
-    // 実際には: :e: + 猫 (prevWasEmoji=false after 猫) + :e: (文末)
     expect(result).toBe(':e:猫:e:');
   });
 
