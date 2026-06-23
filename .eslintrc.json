@@ -49,6 +49,8 @@
     "calculateScore": "readonly",
     "pickNextToken": "readonly",
     "injectEmojis": "readonly",
+    "injectEmojisMixed": "readonly",
+    "containsExcludedScript": "readonly",
 
     "loadNgramStore_": "readonly",
     "flushNgramStore_": "readonly",
